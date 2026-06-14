@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đặt Xe - Car Rental</title>
+    <style>
+        /* ===== CSS Reset & Base ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* ===== Header ===== */
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        /* ===== Navigation - Thanh điều hướng giữa các trang ===== */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .nav a {
+            padding: 10px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        .nav a:hover { background: #2980b9; }
+        /* .active -> trang hiện tại được highlight khác màu */
+        .nav a.active { background: #2c3e50; }
+
+        /* ===== Container chính ===== */
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* ===== Section card ===== */
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #27ae60;
+        }
+
+        /* ===== Form Styles ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 5px rgba(39,174,96,0.3);
+        }
+
+        /* ===== Grid Layout cho form (2 cột) ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        /* Responsive: 1 cột trên mobile */
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #219a52; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #d68910; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+
+        /* ===== Table ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #27ae60;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover { background: #f5f5f5; }
+
+        /* ===== Alert Messages - Thông báo ===== */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* ===== Payment Info - Khung hiển thị thông tin thanh toán ===== */
+        .payment-info {
+            background: #e8f8f5;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+            margin-top: 10px;
+        }
+
+        /* ===== Actions column ===== */
+        .actions { display: flex; gap: 5px; }
+
+        /* ===== Tổng tiền highlight ===== */
+        .total-amount {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TIÊU ĐỀ ===== -->
+    <h1>📋 Quản Lý Đặt Xe</h1>
+
+    <!-- ===== NAVIGATION ===== -->
+    <!-- Thanh điều hướng giữa các trang -->
+    <!-- class="active" -> highlight trang hiện tại -->
+    <div class="nav">
+        <a href="/">🏠 Trang Chủ</a>
+        <a href="/page/cars">🚙 Quản Lý Xe</a>
+        <a href="/page/bookings" class="active">📋 Đặt Xe</a>
+    </div>
+
+    <div class="container">
+        <!-- ===== THÔNG BÁO ===== -->
+        <div id="alert" class="alert"></div>
+
+        <!-- ============================================ -->
+        <!-- FORM TẠO / CẬP NHẬT BOOKING                 -->
+        <!-- ============================================ -->
+        <div class="section">
+            <!-- Tiêu đề form thay đổi khi ở chế độ sửa -->
+            <h2 id="booking-form-title">Tạo Đặt Xe Mới</h2>
+
+            <!-- onsubmit gọi hàm handleBookingSubmit, event.preventDefault() ngăn reload trang -->
+            <form id="bookingForm" onsubmit="handleBookingSubmit(event)">
+                <div class="form-grid">
+                    <!-- Tên khách hàng -->
+                    <div class="form-group">
+                        <label for="customerName">Tên Khách Hàng *</label>
+                        <input type="text" id="customerName" placeholder="VD: Nguyen Van A" required>
+                    </div>
+
+                    <!-- Dropdown chọn xe - được populate bằng JavaScript từ API -->
+                    <div class="form-group">
+                        <label for="bookingCarNumber">Biển Số Xe *</label>
+                        <select id="bookingCarNumber" required>
+                            <option value="">-- Chọn xe --</option>
+                            <!-- Options sẽ được thêm bằng JS khi loadCars() -->
+                        </select>
+                    </div>
+
+                    <!-- Ngày bắt đầu thuê -->
+                    <div class="form-group">
+                        <label for="startDate">Ngày Bắt Đầu *</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+
+                    <!-- Ngày kết thúc thuê -->
+                    <div class="form-group">
+                        <label for="endDate">Ngày Kết Thúc *</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                </div>
+
+                <!-- Khung hiển thị ước tính chi phí (ẩn mặc định) -->
+                <!-- Tự động hiện khi người dùng chọn đủ xe + ngày bắt đầu + ngày kết thúc -->
+                <div class="payment-info" id="paymentPreview" style="display:none;">
+                    <strong>💰 Ước tính chi phí:</strong>
+                    <span id="paymentText"></span>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="submit" class="btn btn-success" id="bookingSubmitBtn">Tạo Booking</button>
+                    <!-- Nút Hủy chỉ hiện khi đang sửa booking -->
+                    <button type="button" class="btn btn-warning" id="bookingCancelBtn" style="display:none;" onclick="cancelBookingEdit()">Hủy</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- BẢNG DANH SÁCH BOOKINGS                      -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2>Danh Sách Đặt Xe</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khách Hàng</th>
+                        <th>Biển Số Xe</th>
+                        <th>Ngày Bắt Đầu</th>
+                        <th>Ngày Kết Thúc</th>
+                        <th>Tổng Tiền</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <!-- tbody sẽ được render bằng JavaScript từ API data -->
+                <tbody id="bookingsTableBody">
+                    <tr><td colspan="6" style="text-align:center;">Đang tải...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- JAVASCRIPT - Logic xử lý phía client        -->
+    <!-- ============================================ -->
+    <script>
+        // ===== BASE URL cho API (để rỗng nghĩa là gọi trực tiếp trên cùng domain) =====
+        const API_URL = "";
+
+        // ===== Biến lưu trữ trạng thái giao diện client =====
+        let editingBookingId = null; // null nếu đang ở chế độ tạo đơn mới; lưu ID đơn đặt xe nếu đang ở chế độ sửa
+        let carsData = [];           // Mảng cục bộ chứa danh sách xe để tiện tính toán hoá đơn xem trước (preview)
+
+        // ==========================================
+        // HÀM HIỂN THỊ THÔNG BÁO NHANH (ALERT TOAST)
+        // ==========================================
+        // type: nhận giá trị 'success' (màu xanh lá) hoặc 'error' (màu đỏ)
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            // Tự động ẩn đi sau 3 giây để không choáng giao diện
+            setTimeout(() => { alert.style.display = 'none'; }, 3000);
+        }
+
+        // ==========================================
+        // HÀM ĐỊNH DẠNG TIỀN VỀ ĐỒNG VND
+        // ==========================================
+        // Sử dụng Intl.NumberFormat để thêm dấu chấm phân cách hàng nghìn (VD: 1500000 -> "1.500.000")
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount);
+        }
+
+        // ==========================================
+        // HÀM ĐỊNH DẠNG NGÀY THÁNG ĐỊA PHƯƠNG
+        // ==========================================
+        // Chuyển chuỗi định dạng ISO string từ database (VD: "2026-06-10T00:00:00Z") thành định dạng dễ đọc "dd/mm/yyyy"
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN');
+        }
+
+        // ==========================================
+        // LOAD DANH SÁCH XE (để hiển thị trong dropdown chọn xe)
+        // ==========================================
+        async function loadCars() {
+            try {
+                // Gọi API lấy toàn bộ danh sách xe từ server
+                const res = await fetch(`${API_URL}/cars`);
+                const data = await res.json();
+                carsData = data.data; // Lưu trữ danh sách xe vào biến toàn cục phục vụ tính giá preview
+
+                // Nạp các phần tử <option> cho thẻ select dropdown chọn xe
+                const select = document.getElementById('bookingCarNumber');
+                select.innerHTML = '<option value="">-- Chọn xe --</option>';
+
+                // Duyệt qua từng chiếc xe để tạo option, hiển thị kèm sức chứa, giá thuê/ngày và trạng thái xe hiện tại
+                carsData.forEach(car => {
+                    select.innerHTML += `<option value="${car.carNumber}">${car.carNumber} - ${car.capacity} chỗ - ${formatCurrency(car.pricePerDay)} VND/ngày (${car.status})</option>`;
+                });
+            } catch (error) {
+                console.error('Lỗi load cars:', error);
+            }
+        }
+
+        // ==========================================
+        // LOAD DANH SÁCH ĐƠN ĐẶT THUÊ XE
+        // ==========================================
+        async function loadBookings() {
+            try {
+                // Gọi API lấy tất cả các đơn đặt thuê xe
+                const res = await fetch(`${API_URL}/bookings`);
+                const data = await res.json();
+
+                const tbody = document.getElementById('bookingsTableBody');
+
+                // Nếu chưa có bất kỳ đơn đặt thuê xe nào
+                if (data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có booking nào</td></tr>';
+                    return;
+                }
+
+                // Render mảng danh sách đơn booking thành các dòng của bảng HTML
+                tbody.innerHTML = data.data.map(booking => `
+                    <tr>
+                        <td><strong>${booking.customerName}</strong></td>
+                        <td>${booking.carNumber}</td>
+                        <td>${formatDate(booking.startDate)}</td>
+                        <td>${formatDate(booking.endDate)}</td>
+                        <td><span class="total-amount">${formatCurrency(booking.totalAmount)} VND</span></td>
+                        <td>
+                            <div class="actions">
+                                <!-- Nút Sửa: gọi hàm editBooking() điền thông tin đơn đặt xe lên form sửa -->
+                                <button class="btn btn-warning" onclick="editBooking('${booking._id}')">Sửa</button>
+                                <!-- Nút Xóa: gọi hàm deleteBooking() xóa đơn booking và trả xe -->
+                                <button class="btn btn-danger" onclick="deleteBooking('${booking._id}')">Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Lỗi load bookings:', error);
+                showAlert('Lỗi khi tải danh sách booking', 'error');
+            }
+        }
+
+        // ==========================================
+        // XỬ LÝ SUBMIT FORM BOOKING (Tạo mới hoặc Cập nhật)
+        // ==========================================
+        async function handleBookingSubmit(event) {
+            event.preventDefault(); // Ngăn trình duyệt tự động reload trang khi submit form
+
+            // Thu thập dữ liệu từ các input của form đặt xe
+            const bookingData = {
+                customerName: document.getElementById('customerName').value,
+                carNumber: document.getElementById('bookingCarNumber').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                // Chú ý: Trường totalAmount (tổng số tiền) sẽ được máy chủ tự động tính toán dựa trên ngày thuê và giá xe
+            };
+
+            try {
+                let res;
+                // Nếu editingBookingId có giá trị: Gửi PUT request cập nhật đơn đặt xe
+                if (editingBookingId) {
+                    res = await fetch(`${API_URL}/bookings/${editingBookingId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookingData),
+                    });
+                } else {
+                    // Ngược lại: Gửi POST request tạo mới đơn đặt xe
+                    res = await fetch(`${API_URL}/bookings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookingData),
+                    });
+                }
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showAlert(editingBookingId ? 'Cập nhật booking thành công!' : 'Tạo booking thành công!');
+                    cancelBookingEdit(); // Reset form nhập liệu về mặc định ban đầu
+                    loadBookings();      // Reload danh sách đơn đặt xe
+                    loadCars();          // Tải lại dropdown xe (vì trạng thái khả dụng của xe đã bị thay đổi)
+                } else {
+                    // Hiển thị lỗi nghiệp vụ gửi về từ server (VD: trùng lịch thuê xe, xe đang bảo trì,...)
+                    showAlert(data.message || 'Có lỗi xảy ra', 'error');
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối server', 'error');
+            }
+        }
+
+        // ==========================================
+        // EDIT BOOKING - Gọi API lấy chi tiết và điền vào form sửa
+        // ==========================================
+        async function editBooking(bookingId) {
+            try {
+                // Gọi API lấy dữ liệu chi tiết của 1 đơn đặt thuê xe cụ thể theo ID
+                const res = await fetch(`${API_URL}/bookings/${bookingId}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showAlert('Không tìm thấy booking', 'error');
+                    return;
+                }
+
+                const booking = data.data;
+
+                // Điền dữ liệu của đơn đặt xe vào các trường nhập liệu tương ứng
+                document.getElementById('customerName').value = booking.customerName;
+                document.getElementById('bookingCarNumber').value = booking.carNumber;
+                // Cắt chuỗi ISO string lấy 10 ký tự đầu tiên (định dạng YYYY-MM-DD) tương thích với input type="date"
+                document.getElementById('startDate').value = booking.startDate.substring(0, 10);
+                document.getElementById('endDate').value = booking.endDate.substring(0, 10);
+
+                // Chuyển tiêu đề form và tên nút lưu sang chế độ "Cập Nhật"
+                editingBookingId = bookingId;
+                document.getElementById('booking-form-title').textContent = 'Cập Nhật Booking';
+                document.getElementById('bookingSubmitBtn').textContent = 'Cập Nhật';
+                document.getElementById('bookingCancelBtn').style.display = 'inline-block'; // Hiện nút Hủy
+
+                // Tính toán và hiển thị hóa đơn ước tính xem trước (preview)
+                calculatePreview();
+
+                // Cuộn mượt màn hình lên vị trí form đặt xe
+                document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showAlert('Lỗi khi lấy thông tin booking', 'error');
+            }
+        }
+
+        // ==========================================
+        // HỦY EDIT - Thiết lập lại Form đặt xe về chế độ Thêm mới
+        // ==========================================
+        function cancelBookingEdit() {
+            editingBookingId = null;                  // Reset trạng thái sửa
+            document.getElementById('bookingForm').reset(); // Đặt trống các trường form
+            document.getElementById('booking-form-title').textContent = 'Tạo Đặt Xe Mới';
+            document.getElementById('bookingSubmitBtn').textContent = 'Tạo Booking';
+            document.getElementById('bookingCancelBtn').style.display = 'none';
+            document.getElementById('paymentPreview').style.display = 'none'; // Ẩn phần xem trước giá tiền
+        }
+
+        // ==========================================
+        // XÓA ĐƠN ĐẶT THUÊ XE / TRẢ XE
+        // ==========================================
+        async function deleteBooking(bookingId) {
+            if (!confirm('Bạn có chắc muốn xóa booking này?')) return;
+
+            try {
+                // Gọi API DELETE xóa đơn đặt xe
+                const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
+                    method: 'DELETE',
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showAlert('Xóa booking thành công!');
+                    loadBookings(); // Tải lại bảng danh sách đơn đặt xe
+                    loadCars();     // Tải lại dropdown xe (trạng thái xe có thể đổi thành "available")
+                } else {
+                    showAlert(data.message || 'Lỗi khi xóa', 'error');
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối server', 'error');
+            }
+        }
+
+        // ==========================================
+        // TÍNH HOÁ ĐƠN ƯỚC TÍNH (PREVIEW PAYMENT)
+        // ==========================================
+        // Hàm tính toán và hiển thị trực tiếp hóa đơn ước tính ngay khi người dùng chọn xe và điền ngày thuê
+        function calculatePreview() {
+            const carNumber = document.getElementById('bookingCarNumber').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            // Thực hiện tính toán chỉ khi đã chọn đầy đủ xe, ngày bắt đầu và ngày kết thúc
+            if (carNumber && startDate && endDate) {
+                // Tìm kiếm xe trong mảng carsData cục bộ để lấy giá thuê một ngày
+                const car = carsData.find(c => c.carNumber === carNumber);
+                if (car) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    
+                    // Tính số ngày thuê xe (làm tròn lên bằng Math.ceil)
+                    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+                    // Nếu số ngày hợp lệ (> 0)
+                    if (days > 0) {
+                        const total = days * car.pricePerDay; // Tính tổng tiền
+                        document.getElementById('paymentText').textContent =
+                            `${days} ngày × ${formatCurrency(car.pricePerDay)} VND = ${formatCurrency(total)} VND`;
+                        document.getElementById('paymentPreview').style.display = 'block'; // Hiển thị box preview
+                    } else {
+                        document.getElementById('paymentPreview').style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // ===== Gắn sự kiện thay đổi (change) cho các ô input để tự động tính preview hóa đơn =====
+        document.getElementById('bookingCarNumber').addEventListener('change', calculatePreview);
+        document.getElementById('startDate').addEventListener('change', calculatePreview);
+        document.getElementById('endDate').addEventListener('change', calculatePreview);
+
+        // ==========================================
+        // KHỞI TẠO BAN ĐẦU - Tải dữ liệu xe và bookings khi trang sẵn sàng
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCars();     // Tải danh sách xe cho dropdown
+            loadBookings(); // Tải bảng danh sách đơn đặt xe
+        });
+    </script>
+</body>
+</html>

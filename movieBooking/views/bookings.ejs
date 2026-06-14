@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍿 MovieBooking - Quản Lý Đơn Đặt Vé</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-light: #f8f9fa;
+      --bg-card: #ffffff;
+      --primary: #007bff;
+      --primary-hover: #0056b3;
+      --danger: #dc3545;
+      --danger-hover: #c82333;
+      --warning: #ffc107;
+      --warning-hover: #e0a800;
+      --text-main: #333333;
+      --text-muted: #6c757d;
+      --border: #dee2e6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 5%;
+      background-color: #343a40;
+      color: #ffffff;
+    }
+
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffffff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .nav-link {
+      color: #adbcce;
+      text-decoration: none;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link.active {
+      color: #ffffff;
+      background-color: var(--primary);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 5% 3rem 5%;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #212529;
+    }
+
+    .section-title i {
+      color: var(--primary);
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
+    .grid-bookings {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .booking-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .booking-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .ticket-stub {
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .customer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--primary);
+      background: #e8f4fd;
+      border: 1px solid #b8dbfc;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.8rem;
+    }
+
+    .movie-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #212529;
+      margin-bottom: 0.5rem;
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    .detail-item i {
+      width: 16px;
+      color: var(--primary);
+    }
+
+    .booking-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+
+    .tickets-count {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #212529;
+    }
+
+    .tickets-count span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .amount {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1.2rem;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background-color 0.2s, color 0.2s;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #495057;
+    }
+
+    .btn-action.edit {
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    .btn-action.edit:hover {
+      background: #e2e6ea;
+      border-color: #dae0e5;
+    }
+
+    .btn-action.delete {
+      background: #fdf3f4;
+      color: var(--danger);
+      border-color: #f5c6cb;
+    }
+
+    .btn-action.delete:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    /* Modal Update */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 450px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
+      transform: translateY(-20px);
+      transition: transform 0.2s ease;
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #000;
+    }
+
+    .modal-title {
+      font-size: 1.35rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #212529;
+    }
+
+    .modal-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #495057;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      background: #fff;
+      color: #495057;
+      font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 4px;
+      border: none;
+      background: #ffc107;
+      color: #212529;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: #e0a800;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #28a745;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: bold;
+      z-index: 2000;
+      transform: translateY(150%);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="nav-logo">
+      <i class="fa-solid fa-film"></i> MovieBooking
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link">
+        <i class="fa-solid fa-calendar-days"></i> Lịch Chiếu
+      </a>
+      <a href="/page/bookings" class="nav-link active">
+        <i class="fa-solid fa-ticket"></i> Vé Đã Đặt
+      </a>
+    </div>
+  </nav>
+
+  <!-- Container -->
+  <main class="container">
+    <h2 class="section-title">
+      <i class="fa-solid fa-ticket"></i> Danh Sách Đơn Đặt Vé
+    </h2>
+    <p class="subtitle">Xem lại các vé đã đặt, thay đổi số lượng vé hoặc hủy phòng vé của bạn.</p>
+
+    <!-- Bookings Grid -->
+    <div class="grid-bookings" id="bookings-grid">
+      <!-- Bookings will be loaded here dynamically -->
+    </div>
+  </main>
+
+  <!-- Update Booking Modal -->
+  <div class="modal-overlay" id="update-modal-overlay">
+    <div class="modal">
+      <button class="modal-close" id="update-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="modal-title">Thay Đổi Số Vé</h3>
+      <p class="modal-subtitle" id="u-movie-details">Cập nhật số lượng vé đặt</p>
+
+      <form id="update-form">
+        <input type="hidden" id="u-booking-id">
+        <input type="hidden" id="u-theater-name">
+        <input type="hidden" id="u-movie-name">
+        <input type="hidden" id="u-showtime">
+
+        <div class="form-group">
+          <label class="form-label" for="u-customer-name">Họ và Tên</label>
+          <input type="text" id="u-customer-name" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="u-ticket-quantity">Số lượng vé mới</label>
+          <input type="number" id="u-ticket-quantity" class="form-control" min="1" max="10" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Cập Nhật Vé</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toast-text">Đã xóa đơn đặt vé!</span>
+  </div>
+
+  <script>
+    // URL tiền tố cho các API (để trống nghĩa là chạy cùng Host và Port của Client)
+    const API_URL = '';
+
+    // Khi tài liệu HTML đã tải xong cấu trúc DOM, bắt đầu tải danh sách vé và cài đặt sự kiện
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchBookings(); // Tải danh sách vé đã đặt từ DB
+      setupEvents();   // Thiết lập các sự kiện đóng/mở modal
+    });
+
+    // 1. Tải danh sách vé đã đặt từ API
+    async function fetchBookings() {
+      const grid = document.getElementById('bookings-grid');
+      // Hiển thị vòng quay loading trong lúc chờ phản hồi từ server
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem;"></i>
+          <p>Đang tải danh sách vé đặt...</p>
+        </div>
+      `;
+
+      try {
+        // Gọi API GET /bookings để lấy toàn bộ vé
+        const res = await fetch(`${API_URL}/bookings`);
+        const bookings = await res.json();
+        // Render danh sách vé lên màn hình giao diện
+        renderBookings(bookings);
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách vé:', error);
+        // Hiển thị thông báo lỗi nếu không kết nối được tới Server
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <p>Không thể kết nối đến server để tải danh sách đặt vé.</p>
+          </div>
+        `;
+      }
+    }
+
+    // 2. Render danh sách vé đặt lên giao diện HTML dưới dạng các thẻ Card
+    function renderBookings(bookings) {
+      const grid = document.getElementById('bookings-grid');
+
+      // Nếu chưa có đơn đặt vé nào trong cơ sở dữ liệu
+      if (!bookings || bookings.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="fa-solid fa-face-frown" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+            <p>Bạn chưa đặt bất kỳ vé xem phim nào.</p>
+            <a href="/" class="btn-action edit" style="display: inline-flex; margin-top: 1.5rem; padding: 0.8rem 1.5rem; border-radius: 50px;">
+              <i class="fa-solid fa-arrow-left"></i> Quay lại trang lịch chiếu
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      // Duyệt qua từng đơn đặt vé để tạo thẻ card HTML
+      grid.innerHTML = bookings.map(b => {
+        // Định dạng thời gian chiếu phim sang dạng tiếng Việt thân thiện (ví dụ: Thứ năm, 11/06/2026 lúc 20:00)
+        const formattedDate = new Date(b.showTime).toLocaleString('vi-VN', {
+          weekday: 'long',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Nút 'Đổi Vé' sẽ truyền đối tượng booking qua JSON String để điền dữ liệu vào Modal cập nhật
+        return `
+          <div class="booking-card">
+            <div class="ticket-stub">
+              <div class="customer-badge">
+                <i class="fa-solid fa-user"></i> ${b.customerName}
+              </div>
+              <h3 class="movie-title">${b.movieName}</h3>
+              <div class="detail-item">
+                <i class="fa-solid fa-building"></i>
+                <span>${b.theaterName}</span>
+              </div>
+              <div class="detail-item">
+                <i class="fa-solid fa-clock"></i>
+                <span>${formattedDate}</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="booking-summary">
+                <div class="tickets-count">
+                  ${b.numberOfTickets} <span>vé</span>
+                </div>
+                <div class="amount">
+                  $${b.totalAmount.toFixed(2)}
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-action edit" onclick="openUpdateModal(${JSON.stringify(b).replace(/"/g, '&quot;')})">
+                  <i class="fa-solid fa-pen-to-square"></i> Đổi Vé
+                </button>
+                <button class="btn-action delete" onclick="deleteBooking('${b._id}')">
+                  <i class="fa-solid fa-trash"></i> Hủy Vé
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 3. Mở Modal điền thông tin đơn vé cũ để chỉnh sửa số lượng vé
+    function openUpdateModal(booking) {
+      // Gán các giá trị hiện tại của đơn vé vào form ẩn/hiện trong Modal
+      document.getElementById('u-booking-id').value = booking._id;
+      document.getElementById('u-customer-name').value = booking.customerName;
+      document.getElementById('u-ticket-quantity').value = booking.numberOfTickets;
+
+      // Lưu trữ các dữ liệu gốc để so khớp lịch chiếu bên backend
+      document.getElementById('u-theater-name').value = booking.theaterName;
+      document.getElementById('u-movie-name').value = booking.movieName;
+      document.getElementById('u-showtime').value = booking.showTime;
+
+      // Hiển thị tên phim & rạp trên tiêu đề Modal
+      document.getElementById('u-movie-details').innerHTML = `
+        <i class="fa-solid fa-film"></i> ${booking.movieName}<br>
+        <i class="fa-solid fa-building"></i> ${booking.theaterName}
+      `;
+
+      // Thêm class 'open' để hiện Modal lên màn hình
+      document.getElementById('update-modal-overlay').classList.add('open');
+    }
+
+    // 4. Thiết lập sự kiện đóng Modal và Submit Form cập nhật số vé
+    function setupEvents() {
+      const overlay = document.getElementById('update-modal-overlay');
+      const closeBtn = document.getElementById('update-modal-close');
+      const form = document.getElementById('update-form');
+
+      // Click vào nút X để đóng Modal
+      closeBtn.addEventListener('click', () => {
+        overlay.classList.remove('open');
+      });
+
+      // Click vào vùng nền đen phía ngoài Modal để tự đóng
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('open');
+        }
+      });
+
+      // Lắng nghe sự kiện Submit Form cập nhật số vé
+      form.addEventListener('submit', handleUpdateSubmit);
+    }
+
+    // 5. Xử lý gửi API cập nhật số vé (PUT /bookings/:bookingId)
+    async function handleUpdateSubmit(e) {
+      e.preventDefault(); // Ngăn trình duyệt reload lại trang
+
+      const bookingId = document.getElementById('u-booking-id').value;
+      const customerName = document.getElementById('u-customer-name').value.trim();
+      const numberOfTickets = parseInt(document.getElementById('u-ticket-quantity').value);
+
+      const theaterName = document.getElementById('u-theater-name').value;
+      const movieName = document.getElementById('u-movie-name').value;
+      const showTime = document.getElementById('u-showtime').value;
+
+      if (!customerName || !bookingId) return;
+
+      const updateData = {
+        customerName,
+        theaterName,
+        movieName,
+        showTime,
+        numberOfTickets
+      };
+
+      try {
+        // Gửi HTTP PUT Request kèm body JSON dữ liệu mới
+        const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast('Cập nhật vé xem phim thành công!', false);
+          // Đóng modal sau khi thành công
+          document.getElementById('update-modal-overlay').classList.remove('open');
+          // Tải lại danh sách vé mới để cập nhật giá tiền & số ghế hiển thị
+          fetchBookings();
+        } else {
+          // Hiển thị thông báo lỗi nếu Server phản hồi thất bại (ví dụ: rạp không đủ ghế trống)
+          showToast(`Lỗi: ${data.message || 'Không thể cập nhật vé'}`, true);
+        }
+      } catch (error) {
+        showToast('Lỗi kết nối mạng, vui lòng thử lại.', true);
+      }
+    }
+
+    // 6. Xử lý gửi API Hủy đặt vé (DELETE /bookings/:bookingId)
+    async function deleteBooking(bookingId) {
+      // Hiển thị hộp thoại xác nhận hủy đặt vé
+      if (!confirm('Bạn có chắc chắn muốn hủy đơn đặt vé này không?')) return;
+
+      try {
+        // Gửi HTTP DELETE Request lên Server
+        const res = await fetch(`${API_URL}/bookings/${bookingId}`, {
+          method: 'DELETE'
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast('Hủy đơn đặt vé thành công!', false);
+          // Tải lại danh sách vé đặt
+          fetchBookings();
+        } else {
+          showToast(`Lỗi: ${data.message || 'Không thể hủy vé'}`, true);
+        }
+      } catch (error) {
+        showToast('Lỗi mạng khi thực hiện hủy vé.', true);
+      }
+    }
+
+    // 7. Hàm phụ hiển thị Toast thông báo trạng thái hoạt động trên góc màn hình
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+
+      toastText.textContent = message;
+
+      if (isError) {
+        toast.classList.add('error');
+        toast.querySelector('i').className = 'fa-solid fa-circle-exclamation';
+      } else {
+        toast.classList.remove('error');
+        toast.querySelector('i').className = 'fa-solid fa-circle-check';
+      }
+
+      toast.classList.add('show');
+      // Tự động biến mất sau 3 giây
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+
+</html>

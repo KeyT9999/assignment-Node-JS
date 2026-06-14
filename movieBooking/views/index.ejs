@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍿 MovieBooking - Đặt Vé Xem Phim Premium</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-light: #f8f9fa;
+      --bg-card: #ffffff;
+      --primary: #007bff;
+      --primary-hover: #0056b3;
+      --danger: #dc3545;
+      --danger-hover: #c82333;
+      --text-main: #333333;
+      --text-muted: #6c757d;
+      --border: #dee2e6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 5%;
+      background-color: #343a40;
+      color: #ffffff;
+    }
+
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffffff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .nav-link {
+      color: #adbcce;
+      text-decoration: none;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-link:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link.active {
+      color: #ffffff;
+      background-color: var(--primary);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 3rem 1rem;
+      background-color: #e9ecef;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #212529;
+    }
+
+    .hero h1 span {
+      color: var(--primary);
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 5% 3rem 5%;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title i {
+      color: var(--primary);
+    }
+
+    .grid-schedules {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .schedule-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .schedule-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .movie-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .movie-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #212529;
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+
+    .screen-badge {
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: #e2e3e5;
+      color: #383d41;
+      border: 1px solid #d6d8db;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .info-row i {
+      width: 16px;
+      color: var(--primary);
+    }
+
+    .price-tag {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #212529;
+      margin-top: 0.8rem;
+    }
+
+    .price-tag span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .seats-left {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .seats-left.high {
+      color: #28a745;
+    }
+
+    .seats-left.low {
+      color: #ffc107;
+    }
+
+    .seats-left.out {
+      color: var(--danger);
+    }
+
+    .btn-book {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 4px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s;
+    }
+
+    .btn-book:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-book:disabled {
+      background: #e9ecef;
+      color: var(--text-muted);
+      cursor: not-allowed;
+      border: 1px solid var(--border);
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 480px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
+      transform: translateY(-20px);
+      transition: transform 0.2s ease;
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #000;
+    }
+
+    .modal-title {
+      font-size: 1.35rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #212529;
+    }
+
+    .modal-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #495057;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      background: #fff;
+      color: #495057;
+      font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .calc-box {
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1.2rem 0;
+    }
+
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #495057;
+    }
+
+    .calc-row.total {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #212529;
+    }
+
+    .calc-row.total span {
+      color: var(--primary);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 4px;
+      border: none;
+      background: #28a745;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+      background: #218838;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #28a745;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: bold;
+      z-index: 2000;
+      transform: translateY(150%);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="nav-logo">
+      <i class="fa-solid fa-film"></i> MovieBooking
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link active">
+        <i class="fa-solid fa-calendar-days"></i> Lịch Chiếu
+      </a>
+      <a href="/page/bookings" class="nav-link">
+        <i class="fa-solid fa-ticket"></i> Vé Đã Đặt
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <h1>Đặt Vé Xem Phim <span>Premium</span></h1>
+    <p>Trải nghiệm xem phim đẳng cấp tại các rạp chiếu phim chất lượng nhất trong thành phố. Đặt vé nhanh chóng và tiện
+      lợi.</p>
+  </header>
+
+  <!-- Container -->
+  <main class="container">
+    <h2 class="section-title">
+      <i class="fa-solid fa-fire"></i> Lịch Chiếu Đang Mở Đặt Vé
+    </h2>
+
+    <!-- Schedules Grid -->
+    <div class="grid-schedules" id="schedules-grid">
+      <!-- Schedules will be rendered here dynamically -->
+    </div>
+  </main>
+
+  <!-- Booking Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="modal-title" id="m-movie-name">Đặt Vé Xem Phim</h3>
+      <p class="modal-subtitle" id="m-theater-name">Rạp Cineplex</p>
+
+      <form id="booking-form">
+        <input type="hidden" id="form-ticket-price">
+        <input type="hidden" id="form-showtime">
+
+        <div class="form-group">
+          <label class="form-label" for="customer-name">Họ và Tên</label>
+          <input type="text" id="customer-name" class="form-control" placeholder="Nhập tên của bạn..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ticket-quantity">Số lượng vé</label>
+          <input type="number" id="ticket-quantity" class="form-control" value="1" min="1" max="10" required>
+        </div>
+
+        <div class="calc-box">
+          <div class="calc-row">
+            <span>Đơn giá:</span>
+            <span id="calc-price">$0.00</span>
+          </div>
+          <div class="calc-row">
+            <span>Số vé:</span>
+            <span id="calc-qty">1 vé</span>
+          </div>
+          <div class="calc-row total">
+            <span>Tổng cộng:</span>
+            <span id="calc-total">$0.00</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">Xác Nhận Đặt Vé</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Message -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toast-text">Đặt vé thành công!</span>
+  </div>
+
+  <script>
+    // URL tiền tố cho các API (để trống nghĩa là chạy cùng Host và Port của Client)
+    const API_URL = '';
+    // Biến toàn cục lưu trữ thông tin lịch chiếu đang được người dùng chọn đặt vé
+    let selectedSchedule = null;
+
+    // Khi tài liệu HTML đã tải xong cấu trúc DOM, bắt đầu tải danh sách lịch chiếu phim
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchSchedules(); // Gọi hàm lấy danh sách lịch chiếu
+      setupEvents();     // Thiết lập các sự kiện cho form nhập liệu và đóng/mở modal
+    });
+
+    // 1. Tải danh sách lịch chiếu phim từ API GET /schedules
+    async function fetchSchedules() {
+      try {
+        const res = await fetch(`${API_URL}/schedules`);
+        const schedules = await res.json();
+        renderSchedules(schedules);
+      } catch (error) {
+        console.error('Lỗi khi tải lịch chiếu:', error);
+        // Hiển thị thông báo lỗi lên màn hình nếu không kết nối được Server
+        document.getElementById('schedules-grid').innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <p>Không thể kết nối đến server để tải lịch chiếu.</p>
+          </div>
+        `;
+      }
+    }
+
+    // 2. Hiển thị danh sách lịch chiếu phim lên màn hình giao diện dưới dạng card
+    function renderSchedules(schedules) {
+      const grid = document.getElementById('schedules-grid');
+      // Nếu chưa có lịch chiếu phim nào được cài đặt trong hệ thống
+      if (schedules.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="fa-solid fa-clapperboard" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+            <p>Hiện chưa có lịch chiếu phim nào được lên lịch.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Duyệt qua mảng lịch chiếu để build HTML
+      grid.innerHTML = schedules.map(s => {
+        // Kiểm tra xem phòng chiếu còn ghế trống không (availableSeats > 0)
+        const isAvailable = s.availableSeats > 0;
+        
+        // Chọn class màu hiển thị cho số ghế: xanh (nhiều hơn 50 ghế), vàng (dưới 50), đỏ (hết chỗ)
+        const seatsClass = s.availableSeats > 50 ? 'high' : (s.availableSeats > 0 ? 'low' : 'out');
+        const seatsText = s.availableSeats > 0 ? `Còn ${s.availableSeats} chỗ` : 'Hết chỗ';
+        
+        // Định dạng thời gian sang dạng tiếng Việt
+        const formattedDate = new Date(s.showTime).toLocaleString('vi-VN', {
+          weekday: 'long',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Nút đặt vé sẽ bị Disable nếu phòng chiếu hết ghế trống
+        return `
+          <div class="schedule-card">
+            <div>
+              <div class="movie-header">
+                <h3 class="movie-title">${s.movieName}</h3>
+                <span class="screen-badge">IMAX</span>
+              </div>
+              <div class="info-row">
+                <i class="fa-solid fa-building-user"></i>
+                <span>${s.theaterName}</span>
+              </div>
+              <div class="info-row">
+                <i class="fa-solid fa-clock"></i>
+                <span>${formattedDate}</span>
+              </div>
+              <div class="price-tag">
+                $${s.ticketPrice.toFixed(2)} <span>/ vé</span>
+              </div>
+            </div>
+            
+            <div>
+              <div class="seats-left ${seatsClass}">
+                <i class="fa-solid fa-chair"></i> ${seatsText}
+              </div>
+              <button class="btn-book" ${isAvailable ? '' : 'disabled'} onclick="openBookingModal(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+                ${isAvailable ? '<i class="fa-solid fa-ticket"></i> Đặt Vé Ngay' : 'Hết Vé'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 3. Mở Modal đặt vé cho lịch chiếu được chọn
+    function openBookingModal(schedule) {
+      selectedSchedule = schedule; // Lưu thông tin lịch chiếu được chọn vào biến toàn cục
+
+      // Gán tên phim và thông tin rạp chiếu lên Modal giao diện
+      document.getElementById('m-movie-name').textContent = schedule.movieName;
+      document.getElementById('m-theater-name').innerHTML = `<i class="fa-solid fa-building"></i> ${schedule.theaterName} &bull; <i class="fa-solid fa-clock"></i> ${new Date(schedule.showTime).toLocaleString('vi-VN')}`;
+
+      // Điền các trường ẩn (hidden) phục vụ tính toán tiền và gửi dữ liệu đi
+      document.getElementById('form-ticket-price').value = schedule.ticketPrice;
+      document.getElementById('form-showtime').value = schedule.showTime;
+
+      // Reset tên khách hàng nhập cũ
+      document.getElementById('customer-name').value = '';
+
+      // Thiết lập số lượng vé tối thiểu là 1, và tối đa không được vượt quá số ghế còn trống của rạp
+      const qtyInput = document.getElementById('ticket-quantity');
+      qtyInput.value = 1;
+      qtyInput.max = schedule.availableSeats;
+
+      // Tính toán tiền mặt động ngay khi mở modal
+      updateCalculations();
+
+      // Hiện modal đặt vé bằng cách thêm class 'open'
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    // 4. Khởi tạo lắng nghe sự kiện trên form và đóng/mở modal
+    function setupEvents() {
+      const overlay = document.getElementById('modal-overlay');
+      const closeBtn = document.getElementById('modal-close');
+      const qtyInput = document.getElementById('ticket-quantity');
+      const form = document.getElementById('booking-form');
+
+      // Nhấp nút X để đóng Modal đặt vé
+      closeBtn.addEventListener('click', () => {
+        overlay.classList.remove('open');
+      });
+
+      // Nhấp ra ngoài vùng Modal để đóng
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('open');
+        }
+      });
+
+      // Tính lại tổng tiền tự động mỗi khi người dùng thay đổi số lượng vé
+      qtyInput.addEventListener('input', updateCalculations);
+      qtyInput.addEventListener('change', updateCalculations);
+
+      // Xử lý gửi Form đăng ký đặt vé
+      form.addEventListener('submit', handleBookingSubmit);
+    }
+
+    // 5. Hàm tính toán và cập nhật chi phí hiển thị tức thời trong Modal đặt vé
+    function updateCalculations() {
+      const price = parseFloat(document.getElementById('form-ticket-price').value) || 0;
+      const qty = parseInt(document.getElementById('ticket-quantity').value) || 1;
+
+      // Cập nhật text hiển thị đơn giá, số lượng vé và tổng số tiền thanh toán
+      document.getElementById('calc-price').textContent = `$${price.toFixed(2)}`;
+      document.getElementById('calc-qty').textContent = `${qty} vé`;
+      document.getElementById('calc-total').textContent = `$${(price * qty).toFixed(2)}`;
+    }
+
+    // 6. Gửi API tạo mới đơn đặt vé: POST /bookings
+    async function handleBookingSubmit(e) {
+      e.preventDefault(); // Ngăn hành vi tải lại trang mặc định của trình duyệt
+
+      const customerName = document.getElementById('customer-name').value.trim();
+      const numberOfTickets = parseInt(document.getElementById('ticket-quantity').value);
+
+      if (!customerName) return;
+
+      // Đóng gói dữ liệu đặt vé
+      const bookingData = {
+        customerName,
+        theaterName: selectedSchedule.theaterName,
+        movieName: selectedSchedule.movieName,
+        showTime: selectedSchedule.showTime,
+        numberOfTickets
+      };
+
+      try {
+        // Gửi API POST đặt vé với dữ liệu dạng JSON
+        const res = await fetch(`${API_URL}/bookings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingData)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast('Đặt vé xem phim thành công!', false);
+          // Đóng modal đặt vé
+          document.getElementById('modal-overlay').classList.remove('open');
+          // Tải lại danh sách lịch chiếu để cập nhật lại số ghế trống thời gian thực
+          fetchSchedules();
+        } else {
+          // Hiển thị thông báo lỗi trả về từ backend (Ví dụ: Số ghế trống không đủ)
+          showToast(`Lỗi: ${data.message || 'Không thể tạo đơn đặt vé'}`, true);
+        }
+      } catch (error) {
+        showToast('Lỗi kết nối mạng, vui lòng thử lại.', true);
+      }
+    }
+
+    // 7. Hiển thị Toast thông báo thành công hoặc lỗi ở góc màn hình
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+
+      toastText.textContent = message;
+
+      if (isError) {
+        toast.classList.add('error');
+        toast.querySelector('i').className = 'fa-solid fa-circle-exclamation';
+      } else {
+        toast.classList.remove('error');
+        toast.querySelector('i').className = 'fa-solid fa-circle-check';
+      }
+
+      toast.classList.add('show');
+      // Toast biến mất sau 3 giây
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>SimpleQuiz - Quản Lý Trắc Nghiệm</title>
+  <style>
+    :root {
+      --color-electric-lime: #beff50;
+      --color-near-black: #14140f;
+      --color-pure-black: #000000;
+      --color-pure-white: #ffffff;
+      --color-warm-cream: #f5f5eb;
+      --color-parchment-card: #fafaf5;
+      --color-stone: #d2d2c8;
+      --color-graphite: #6e6e64;
+      --color-coral-alert: #eb3131;
+      --color-mint-confirm: #1dc479;
+
+      --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+    }
+
+    body {
+      background-color: var(--color-warm-cream);
+      color: var(--color-near-black);
+      margin: 0;
+      padding: 40px 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--color-pure-white);
+      padding: 40px;
+      border-radius: 26px;
+      border: 1px solid var(--color-stone);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--color-near-black);
+      margin-top: 0;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--color-near-black);
+      margin: 0 0 12px 0;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--color-near-black);
+      margin: 0;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      background: var(--color-parchment-card);
+      padding: 8px;
+      border-radius: 26px;
+      border: 1px solid var(--color-stone);
+      width: fit-content;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--color-near-black);
+      font-weight: 500;
+      padding: 8px 20px;
+      border-radius: 26px;
+      font-size: 14px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .nav a:hover {
+      background: rgba(20, 20, 15, 0.05);
+    }
+
+    .nav a.active {
+      background: var(--color-near-black);
+      color: var(--color-pure-white);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 20px;
+      border: 1px solid var(--color-stone);
+      border-radius: 26px;
+      background: var(--color-pure-white);
+      color: var(--color-near-black);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--color-near-black);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border: 1px solid var(--color-near-black);
+      border-radius: 26px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--color-electric-lime);
+      color: var(--color-near-black);
+    }
+
+    .btn-primary:hover {
+      background-color: #aae045;
+    }
+
+    .btn-secondary {
+      background-color: var(--color-pure-white);
+      color: var(--color-near-black);
+      border: 1px solid var(--color-stone);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-parchment-card);
+    }
+
+    .btn-danger {
+      background-color: var(--color-pure-white);
+      color: var(--color-coral-alert);
+      border: 1px solid var(--color-coral-alert);
+    }
+
+    .btn-danger:hover {
+      background-color: rgba(235, 49, 49, 0.08);
+    }
+
+    .btn-accent {
+      background-color: var(--color-near-black);
+      color: var(--color-pure-white);
+      border: 1px solid var(--color-near-black);
+    }
+
+    .btn-accent:hover {
+      background-color: var(--color-charcoal);
+    }
+
+    .btn-outline {
+      background-color: var(--color-pure-white);
+      color: var(--color-near-black);
+      border: 1px solid var(--color-stone);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--color-parchment-card);
+    }
+
+    .btn-outline.active {
+      background-color: var(--color-near-black);
+      color: var(--color-pure-white);
+      border-color: var(--color-near-black);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      margin-bottom: 24px;
+      color: var(--color-graphite);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .back-btn:hover {
+      color: var(--color-near-black);
+      text-decoration: underline;
+    }
+
+    .quiz-header-info {
+      background: var(--color-parchment-card);
+      padding: 24px;
+      border: 1px solid var(--color-stone);
+      margin-bottom: 32px;
+      border-radius: 26px;
+    }
+
+    .quiz-header-info p {
+      margin: 0;
+      color: var(--color-graphite);
+      font-size: 14px;
+    }
+
+    .quiz-list, .question-list {
+      margin-top: 24px;
+    }
+
+    .quiz-card {
+      border: 1px solid var(--color-stone);
+      padding: 24px;
+      margin-bottom: 16px;
+      border-radius: 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-parchment-card);
+      transition: border-color 0.2s;
+    }
+
+    .quiz-card:hover {
+      border-color: var(--color-near-black);
+    }
+
+    .quiz-info h3 {
+      margin: 0 0 8px 0;
+      color: var(--color-near-black);
+    }
+
+    .quiz-info p {
+      margin: 0 0 12px 0;
+      color: var(--color-graphite);
+      font-size: 14px;
+    }
+
+    .quiz-info span {
+      font-size: 12px;
+      color: var(--color-graphite);
+      background: var(--color-pure-white);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--color-stone);
+      display: inline-block;
+    }
+
+    .quiz-actions, .actions-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .question-card {
+      border: 1px solid var(--color-stone);
+      padding: 24px;
+      margin-bottom: 16px;
+      border-radius: 26px;
+      background: var(--color-parchment-card);
+    }
+
+    .question-card h4 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: var(--color-near-black);
+      font-weight: 500;
+    }
+
+    .options-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0 0 16px 0;
+    }
+
+    .option-item {
+      padding: 10px 16px;
+      border: 1px solid var(--color-stone);
+      margin-bottom: 8px;
+      border-radius: 26px;
+      font-size: 14px;
+      background: var(--color-pure-white);
+      color: var(--color-near-black);
+    }
+
+    .option-item.correct {
+      background-color: #d1fae5;
+      border-color: var(--color-mint-confirm);
+      color: #065f46;
+      font-weight: 500;
+    }
+
+    .question-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--color-graphite);
+      align-items: center;
+      border-top: 1px solid var(--color-stone);
+      padding-top: 16px;
+      margin-top: 8px;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--color-near-black);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: underline;
+    }
+
+    .btn-link:hover {
+      color: var(--color-pure-black);
+    }
+
+    .btn-link-danger {
+      color: var(--color-coral-alert);
+    }
+
+    .btn-link-danger:hover {
+      color: #b91c1c;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(20, 20, 15, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: var(--color-pure-white);
+      padding: 32px;
+      border-radius: 26px;
+      width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--color-stone);
+    }
+
+    .modal h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--color-near-black);
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px 20px;
+      border: 1px solid var(--color-stone);
+      border-radius: 26px;
+      box-sizing: border-box;
+      font-size: 14px;
+      color: var(--color-near-black);
+      background: var(--color-pure-white);
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--color-near-black);
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .option-radio {
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      accent-color: var(--color-near-black);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Quản Lý Trắc Nghiệm - SimpleQuiz</h1>
+    
+    <div class="nav">
+      <a href="/" class="active">Quản Lý Quiz</a>
+      <a href="/pages/questions">Ngân Hàng Câu Hỏi</a>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm bộ Quiz...">
+      <button class="btn btn-primary" onclick="openModal()">Tạo Quiz Mới</button>
+    </div>
+
+    <div class="quiz-list" id="quizzes-grid">
+      <p style="text-align: center; color: #666;">Đang tải danh sách Quiz...</p>
+    </div>
+  </div>
+
+  <!-- Create Quiz Modal -->
+  <div class="modal-overlay" id="quiz-modal">
+    <div class="modal">
+      <h3 style="margin-top:0;">Tạo Quiz Mới</h3>
+      <form id="quiz-form">
+        <div class="form-group">
+          <label>Tiêu đề Quiz</label>
+          <input type="text" id="quiz-title-input" required placeholder="Nhập tiêu đề...">
+        </div>
+        <div class="form-group">
+          <label>Mô tả</label>
+          <textarea id="quiz-desc-input" rows="3" required placeholder="Nhập mô tả..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Mảng lưu trữ tất cả các bộ Quiz nhận được từ máy chủ
+    let allQuizzes = [];
+
+    // Sự kiện DOMContentLoaded: Khi toàn bộ trang HTML đã tải xong, gọi hàm fetchQuizzes để lấy dữ liệu từ server
+    document.addEventListener('DOMContentLoaded', fetchQuizzes);
+
+    // Hàm gọi API lấy danh sách toàn bộ Quiz
+    function fetchQuizzes() {
+      fetch('/quizzes') // Gọi API lấy danh sách quiz
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            allQuizzes = res.data; // Lưu trữ danh sách vào mảng cục bộ
+            renderQuizzes(allQuizzes); // Gọi hàm hiển thị giao diện
+          } else {
+            alert('Lỗi: ' + res.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('quizzes-grid').innerHTML = '<p style="color:red; text-align:center;">Lỗi kết nối server.</p>';
+        });
+    }
+
+    // Hàm render HTML hiển thị danh sách các bộ Quiz lên giao diện
+    function renderQuizzes(list) {
+      const grid = document.getElementById('quizzes-grid');
+      if (list.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; color: #888;">Chưa có bộ Quiz nào.</p>';
+        return;
+      }
+      // Ánh xạ mảng đối tượng thành các chuỗi HTML card và đưa vào grid
+      grid.innerHTML = list.map(q => `
+        <div class="quiz-card">
+          <div class="quiz-info">
+            <h3>${q.title}</h3>
+            <p>${q.description}</p>
+            <span>Số câu hỏi: ${q.questions ? q.questions.length : 0}</span>
+          </div>
+          <div class="quiz-actions">
+            <!-- Điều hướng sang trang chi tiết với id của bộ Quiz -->
+            <a href="/pages/quizzes/${q._id}" class="btn btn-primary">Chi Tiết</a>
+            <!-- Gọi hàm deleteQuiz khi nhấn nút Xóa -->
+            <button class="btn btn-danger" onclick="deleteQuiz('${q._id}')">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Các hàm kiểm soát hiển thị Modal tạo mới Quiz
+    function openModal() {
+      document.getElementById('quiz-form').reset(); // Đặt lại các ô nhập liệu
+      document.getElementById('quiz-modal').style.display = 'flex'; // Hiển thị modal dạng flex
+    }
+    function closeModal() {
+      document.getElementById('quiz-modal').style.display = 'none'; // Ẩn modal
+    }
+
+    // Lắng nghe sự kiện submit Form để tạo mới bộ Quiz
+    document.getElementById('quiz-form').addEventListener('submit', function(e) {
+      e.preventDefault(); // Ngăn hành vi tải lại trang mặc định của form
+      const title = document.getElementById('quiz-title-input').value.trim();
+      const description = document.getElementById('quiz-desc-input').value.trim();
+
+      // Gửi yêu cầu POST tạo mới Quiz lên API
+      fetch('/quizzes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          closeModal(); // Đóng modal
+          fetchQuizzes(); // Tải lại danh sách Quiz mới nhất
+        } else {
+          alert('Lỗi: ' + res.message);
+        }
+      });
+    });
+
+    // Lắng nghe sự kiện gõ phím trong ô tìm kiếm để lọc bộ Quiz trực tiếp ở client
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      const val = e.target.value.toLowerCase();
+      // Lọc các Quiz có tiêu đề hoặc mô tả chứa từ khoá tìm kiếm
+      const filtered = allQuizzes.filter(q => 
+        q.title.toLowerCase().includes(val) || 
+        q.description.toLowerCase().includes(val)
+      );
+      renderQuizzes(filtered); // Render lại danh sách đã lọc
+    });
+
+    // Hàm gọi API xoá bộ Quiz theo ID
+    function deleteQuiz(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa Quiz này?')) {
+        fetch('/quizzes/' + id, { method: 'DELETE' })
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              fetchQuizzes(); // Tải lại danh sách sau khi xoá thành công
+            } else {
+              alert('Lỗi: ' + res.message);
+            }
+          });
+      }
+    }
+  </script>
+</body>
+</html>

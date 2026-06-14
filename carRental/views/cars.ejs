@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Xe - Car Rental</title>
+    <style>
+        /* ===== CSS Reset & Base ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            padding: 20px;
+        }
+
+        /* ===== Header ===== */
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        /* ===== Navigation ===== */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .nav a {
+            padding: 10px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        .nav a:hover { background: #2980b9; }
+        .nav a.active { background: #2c3e50; }
+
+        /* ===== Container & Cards ===== */
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        /* ===== Form Styles ===== */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52,152,219,0.3);
+        }
+
+        /* ===== Grid Layout ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #d68910; }
+
+        /* ===== Table ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover { background: #f5f5f5; }
+
+        /* ===== Status Badge - Nhãn trạng thái xe ===== */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-available { background: #27ae60; }   /* Xanh lá = sẵn sàng */
+        .badge-rented { background: #e74c3c; }      /* Đỏ = đang thuê */
+        .badge-maintenance { background: #f39c12; }  /* Vàng = bảo trì */
+
+        /* ===== Feature Tags - Nhãn tính năng xe ===== */
+        .feature-tag {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #2980b9;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin: 2px;
+        }
+
+        /* ===== Alert Messages ===== */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* ===== Actions ===== */
+        .actions { display: flex; gap: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TIÊU ĐỀ ===== -->
+    <h1>🚙 Quản Lý Xe</h1>
+
+    <!-- ===== NAVIGATION ===== -->
+    <div class="nav">
+        <a href="/">🏠 Trang Chủ</a>
+        <a href="/page/cars" class="active">🚙 Quản Lý Xe</a>
+        <a href="/page/bookings">📋 Đặt Xe</a>
+    </div>
+
+    <div class="container">
+        <!-- ===== THÔNG BÁO ===== -->
+        <div id="alert" class="alert"></div>
+
+        <!-- ============================================ -->
+        <!-- FORM THÊM / SỬA XE                          -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2 id="car-form-title">Thêm Xe Mới</h2>
+            <form id="carForm" onsubmit="handleCarSubmit(event)">
+                <div class="form-grid">
+                    <!-- Biển số xe -->
+                    <div class="form-group">
+                        <label for="carNumber">Biển Số Xe *</label>
+                        <input type="text" id="carNumber" placeholder="VD: 51A-12345" required>
+                    </div>
+
+                    <!-- Sức chứa -->
+                    <div class="form-group">
+                        <label for="capacity">Sức Chứa (số ghế) *</label>
+                        <input type="number" id="capacity" min="1" placeholder="VD: 7" required>
+                    </div>
+
+                    <!-- Giá thuê/ngày -->
+                    <div class="form-group">
+                        <label for="pricePerDay">Giá Thuê/Ngày (VND) *</label>
+                        <input type="number" id="pricePerDay" min="0" placeholder="VD: 500000" required>
+                    </div>
+
+                    <!-- Trạng thái xe (dropdown) -->
+                    <div class="form-group">
+                        <label for="status">Trạng Thái</label>
+                        <select id="status">
+                            <option value="available">Sẵn sàng (Available)</option>
+                            <option value="rented">Đang thuê (Rented)</option>
+                            <option value="maintenance">Bảo trì (Maintenance)</option>
+                        </select>
+                    </div>
+
+                    <!-- Tính năng xe - nhập nhiều giá trị phân cách bằng dấu phẩy -->
+                    <!-- style="grid-column: 1 / -1" -> chiếm cả 2 cột -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="features">Tính Năng (phân cách bằng dấu phẩy)</label>
+                        <input type="text" id="features" placeholder="VD: automatic, air-conditioner, GPS">
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button type="submit" class="btn btn-primary" id="carSubmitBtn">Thêm Xe</button>
+                    <button type="button" class="btn btn-warning" id="carCancelBtn" style="display:none;" onclick="cancelCarEdit()">Hủy</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- BẢNG DANH SÁCH XE                            -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2>Danh Sách Xe</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Biển Số</th>
+                        <th>Sức Chứa</th>
+                        <th>Giá/Ngày</th>
+                        <th>Trạng Thái</th>
+                        <th>Tính Năng</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="carsTableBody">
+                    <tr><td colspan="6" style="text-align:center;">Đang tải...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- JAVASCRIPT                                   -->
+    <!-- ============================================ -->
+    <script>
+        // Đường dẫn API (rỗng tức là gọi trực tiếp trên cùng domain hiện tại của server)
+        const API_URL = "";
+        let editingCarNumber = null; // Biến lưu biển số xe đang sửa (null nếu đang ở chế độ thêm mới)
+        let carsData = [];           // Mảng cục bộ lưu danh sách xe để tiện truy xuất khi nhấn "Sửa"
+
+        // ===== Hiển thị thông báo Toast cảnh báo nhanh trên màn hình =====
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => { alert.style.display = 'none'; }, 3000); // Tự động ẩn sau 3 giây
+        }
+
+        // ===== Định dạng tiền tệ VND (Ví dụ: 500000 -> 500.000) =====
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount);
+        }
+
+        // ==========================================
+        // GỌI API LOAD DANH SÁCH XE TỪ SERVER VÀ HIỂN THỊ
+        // ==========================================
+        async function loadCars() {
+            try {
+                // Sử dụng fetch API gửi GET request đến /cars
+                const res = await fetch(`${API_URL}/cars`);
+                const data = await res.json();
+                carsData = data.data; // Lưu trữ danh sách vào biến carsData
+
+                const tbody = document.getElementById('carsTableBody');
+
+                // Nếu cơ sở dữ liệu trống
+                if (data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Chưa có xe nào</td></tr>';
+                    return;
+                }
+
+                // Render dữ liệu xe thành các hàng của thẻ <table>
+                tbody.innerHTML = data.data.map(car => `
+                    <tr>
+                        <td><strong>${car.carNumber}</strong></td>
+                        <td>${car.capacity} chỗ</td>
+                        <td>${formatCurrency(car.pricePerDay)} VND</td>
+                        <td>
+                            <!-- Badge hiển thị trạng thái với class css tương ứng màu sắc khác nhau -->
+                            <span class="badge badge-${car.status}">${car.status}</span>
+                        </td>
+                        <td>
+                            <!-- Ánh xạ các phần tử tiện ích đi kèm của xe thành các tag nhỏ (như AC, GPS) -->
+                            ${car.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <!-- Nhấn Sửa sẽ điền thông tin xe lên form phía trên -->
+                                <button class="btn btn-warning" onclick="editCar('${car.carNumber}')">Sửa</button>
+                                <!-- Nhấn Xóa để gọi API xóa chiếc xe này -->
+                                <button class="btn btn-danger" onclick="deleteCar('${car.carNumber}')">Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Lỗi load cars:', error);
+                showAlert('Lỗi khi tải danh sách xe', 'error');
+            }
+        }
+
+        // ==========================================
+        // XỬ LÝ SUBMIT FORM XE (Thêm mới / Cập nhật)
+        // ==========================================
+        async function handleCarSubmit(event) {
+            event.preventDefault(); // Ngăn trình duyệt tải lại trang
+
+            // Thu thập và chuyển đổi dữ liệu từ các trường nhập liệu của Form
+            const carData = {
+                carNumber: document.getElementById('carNumber').value,
+                capacity: parseInt(document.getElementById('capacity').value),
+                pricePerDay: parseInt(document.getElementById('pricePerDay').value),
+                status: document.getElementById('status').value,
+                // Chuyển chuỗi "GPS, Điều hòa" -> mảng ["GPS", "Điều hòa"] bằng split và trim
+                features: document.getElementById('features').value
+                    .split(',')
+                    .map(f => f.trim())
+                    .filter(f => f !== ''), // Loại bỏ phần tử rỗng
+            };
+
+            try {
+                let res;
+                // Nếu editingCarNumber khác null: Gọi API PUT cập nhật
+                if (editingCarNumber) {
+                    res = await fetch(`${API_URL}/cars/${editingCarNumber}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(carData),
+                    });
+                } else {
+                    // Ngược lại: Gọi API POST tạo xe mới
+                    res = await fetch(`${API_URL}/cars`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(carData),
+                    });
+                }
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showAlert(editingCarNumber ? 'Cập nhật xe thành công!' : 'Thêm xe thành công!');
+                    cancelCarEdit(); // Reset form nhập liệu về ban đầu
+                    loadCars();      // Tải lại danh sách xe mới nhất
+                } else {
+                    showAlert(data.message || 'Có lỗi xảy ra', 'error');
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối server', 'error');
+            }
+        }
+
+        // ==========================================
+        // CHỈNH SỬA XE - Điền dữ liệu xe chọn vào form
+        // ==========================================
+        function editCar(carNumber) {
+            // Tìm đối tượng xe trong mảng cục bộ đã load
+            const car = carsData.find(c => c.carNumber === carNumber);
+            if (!car) return;
+
+            // Đưa thông tin của xe lên các ô nhập của Form
+            document.getElementById('carNumber').value = car.carNumber;
+            document.getElementById('capacity').value = car.capacity;
+            document.getElementById('pricePerDay').value = car.pricePerDay;
+            document.getElementById('status').value = car.status;
+            document.getElementById('features').value = car.features.join(', ');
+
+            // Chuyển tiêu đề và nút lưu sang trạng thái "Cập Nhật"
+            editingCarNumber = carNumber;
+            document.getElementById('car-form-title').textContent = 'Cập Nhật Xe';
+            document.getElementById('carSubmitBtn').textContent = 'Cập Nhật';
+            document.getElementById('carCancelBtn').style.display = 'inline-block'; // Hiện nút hủy sửa
+
+            // Cuộn màn hình mượt mà lên vị trí Form nhập liệu
+            document.getElementById('carForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // HỦY EDIT XE - Đặt lại trạng thái Form về chế độ Thêm mới
+        // ==========================================
+        function cancelCarEdit() {
+            editingCarNumber = null;
+            document.getElementById('carForm').reset();
+            document.getElementById('car-form-title').textContent = 'Thêm Xe Mới';
+            document.getElementById('carSubmitBtn').textContent = 'Thêm Xe';
+            document.getElementById('carCancelBtn').style.display = 'none'; // Ẩn nút hủy sửa
+        }
+
+        // ==========================================
+        // XÓA XE KHỎI HỆ THỐNG
+        // ==========================================
+        async function deleteCar(carNumber) {
+            if (!confirm(`Bạn có chắc muốn xóa xe ${carNumber}?`)) return;
+
+            try {
+                // Gọi API DELETE tới đường dẫn /cars/:carNumber
+                const res = await fetch(`${API_URL}/cars/${carNumber}`, {
+                    method: 'DELETE',
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showAlert('Xóa xe thành công!');
+                    loadCars(); // Load lại bảng xe
+                } else {
+                    showAlert(data.message || 'Lỗi khi xóa', 'error');
+                }
+            } catch (error) {
+                showAlert('Lỗi kết nối server', 'error');
+            }
+        }
+
+        // ===== Sự kiện khởi tạo ban đầu: Load danh sách xe khi DOM sẵn sàng =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCars();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>SimpleQuiz - Ngân Hàng Câu Hỏi</title>
+  <style>
+    :root {
+      --color-electric-lime: #beff50;
+      --color-near-black: #14140f;
+      --color-pure-black: #000000;
+      --color-pure-white: #ffffff;
+      --color-warm-cream: #f5f5eb;
+      --color-parchment-card: #fafaf5;
+      --color-stone: #d2d2c8;
+      --color-graphite: #6e6e64;
+      --color-coral-alert: #eb3131;
+      --color-mint-confirm: #1dc479;
+
+      --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+    }
+
+    body {
+      background-color: var(--color-warm-cream);
+      color: var(--color-near-black);
+      margin: 0;
+      padding: 40px 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--color-pure-white);
+      padding: 40px;
+      border-radius: 26px;
+      border: 1px solid var(--color-stone);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 500;
+      color: var(--color-near-black);
+      margin-top: 0;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--color-near-black);
+      margin: 0 0 12px 0;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--color-near-black);
+      margin: 0;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      background: var(--color-parchment-card);
+      padding: 8px;
+      border-radius: 26px;
+      border: 1px solid var(--color-stone);
+      width: fit-content;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--color-near-black);
+      font-weight: 500;
+      padding: 8px 20px;
+      border-radius: 26px;
+      font-size: 14px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .nav a:hover {
+      background: rgba(20, 20, 15, 0.05);
+    }
+
+    .nav a.active {
+      background: var(--color-near-black);
+      color: var(--color-pure-white);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 20px;
+      border: 1px solid var(--color-stone);
+      border-radius: 26px;
+      background: var(--color-pure-white);
+      color: var(--color-near-black);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--color-near-black);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border: 1px solid var(--color-near-black);
+      border-radius: 26px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--color-electric-lime);
+      color: var(--color-near-black);
+    }
+
+    .btn-primary:hover {
+      background-color: #aae045;
+    }
+
+    .btn-secondary {
+      background-color: var(--color-pure-white);
+      color: var(--color-near-black);
+      border: 1px solid var(--color-stone);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-parchment-card);
+    }
+
+    .btn-danger {
+      background-color: var(--color-pure-white);
+      color: var(--color-coral-alert);
+      border: 1px solid var(--color-coral-alert);
+    }
+
+    .btn-danger:hover {
+      background-color: rgba(235, 49, 49, 0.08);
+    }
+
+    .btn-accent {
+      background-color: var(--color-near-black);
+      color: var(--color-pure-white);
+      border: 1px solid var(--color-near-black);
+    }
+
+    .btn-accent:hover {
+      background-color: var(--color-charcoal);
+    }
+
+    .btn-outline {
+      background-color: var(--color-pure-white);
+      color: var(--color-near-black);
+      border: 1px solid var(--color-stone);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--color-parchment-card);
+    }
+
+    .btn-outline.active {
+      background-color: var(--color-near-black);
+      color: var(--color-pure-white);
+      border-color: var(--color-near-black);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      margin-bottom: 24px;
+      color: var(--color-graphite);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .back-btn:hover {
+      color: var(--color-near-black);
+      text-decoration: underline;
+    }
+
+    .quiz-header-info {
+      background: var(--color-parchment-card);
+      padding: 24px;
+      border: 1px solid var(--color-stone);
+      margin-bottom: 32px;
+      border-radius: 26px;
+    }
+
+    .quiz-header-info p {
+      margin: 0;
+      color: var(--color-graphite);
+      font-size: 14px;
+    }
+
+    .quiz-list, .question-list {
+      margin-top: 24px;
+    }
+
+    .quiz-card {
+      border: 1px solid var(--color-stone);
+      padding: 24px;
+      margin-bottom: 16px;
+      border-radius: 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-parchment-card);
+      transition: border-color 0.2s;
+    }
+
+    .quiz-card:hover {
+      border-color: var(--color-near-black);
+    }
+
+    .quiz-info h3 {
+      margin: 0 0 8px 0;
+      color: var(--color-near-black);
+    }
+
+    .quiz-info p {
+      margin: 0 0 12px 0;
+      color: var(--color-graphite);
+      font-size: 14px;
+    }
+
+    .quiz-info span {
+      font-size: 12px;
+      color: var(--color-graphite);
+      background: var(--color-pure-white);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--color-stone);
+      display: inline-block;
+    }
+
+    .quiz-actions, .actions-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .question-card {
+      border: 1px solid var(--color-stone);
+      padding: 24px;
+      margin-bottom: 16px;
+      border-radius: 26px;
+      background: var(--color-parchment-card);
+    }
+
+    .question-card h4 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: var(--color-near-black);
+      font-weight: 500;
+    }
+
+    .options-list {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0 0 16px 0;
+    }
+
+    .option-item {
+      padding: 10px 16px;
+      border: 1px solid var(--color-stone);
+      margin-bottom: 8px;
+      border-radius: 26px;
+      font-size: 14px;
+      background: var(--color-pure-white);
+      color: var(--color-near-black);
+    }
+
+    .option-item.correct {
+      background-color: #d1fae5;
+      border-color: var(--color-mint-confirm);
+      color: #065f46;
+      font-weight: 500;
+    }
+
+    .question-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--color-graphite);
+      align-items: center;
+      border-top: 1px solid var(--color-stone);
+      padding-top: 16px;
+      margin-top: 8px;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--color-near-black);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: underline;
+    }
+
+    .btn-link:hover {
+      color: var(--color-pure-black);
+    }
+
+    .btn-link-danger {
+      color: var(--color-coral-alert);
+    }
+
+    .btn-link-danger:hover {
+      color: #b91c1c;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(20, 20, 15, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: var(--color-pure-white);
+      padding: 32px;
+      border-radius: 26px;
+      width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--color-stone);
+    }
+
+    .modal h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--color-near-black);
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px 20px;
+      border: 1px solid var(--color-stone);
+      border-radius: 26px;
+      box-sizing: border-box;
+      font-size: 14px;
+      color: var(--color-near-black);
+      background: var(--color-pure-white);
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--color-near-black);
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .option-radio {
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      accent-color: var(--color-near-black);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Ngân Hàng Câu Hỏi</h1>
+    
+    <div class="nav">
+      <a href="/">Quản Lý Quiz</a>
+      <a href="/pages/questions" class="active">Ngân Hàng Câu Hỏi</a>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search-input" class="search-input" placeholder="Tìm câu hỏi theo nội dung hoặc từ khóa...">
+      <button class="btn btn-primary" onclick="openCreateModal()">Tạo Câu Hỏi Mới</button>
+    </div>
+
+    <div class="question-list" id="questions-grid">
+      <p style="text-align: center; color: #666;">Đang tải danh sách câu hỏi...</p>
+    </div>
+  </div>
+
+  <!-- Question Form Modal (Create and Edit) -->
+  <div class="modal-overlay" id="q-modal">
+    <div class="modal">
+      <h3 style="margin-top:0;" id="modal-title-text">Tạo Câu Hỏi Mới</h3>
+      <form id="q-form">
+        <div class="form-group">
+          <label>Nội dung câu hỏi</label>
+          <input type="text" id="q-text-input" required placeholder="Nhập câu hỏi...">
+        </div>
+        <div class="form-group">
+          <label>Các phương án (Tích chọn đáp án đúng)</label>
+          <div class="option-row">
+            <input type="radio" name="correct-opt" value="0" checked class="option-radio">
+            <input type="text" id="opt-0" required placeholder="Đáp án A">
+          </div>
+          <div class="option-row">
+            <input type="radio" name="correct-opt" value="1" class="option-radio">
+            <input type="text" id="opt-1" required placeholder="Đáp án B">
+          </div>
+          <div class="option-row">
+            <input type="radio" name="correct-opt" value="2" class="option-radio">
+            <input type="text" id="opt-2" required placeholder="Đáp án C">
+          </div>
+          <div class="option-row">
+            <input type="radio" name="correct-opt" value="3" class="option-radio">
+            <input type="text" id="opt-3" required placeholder="Đáp án D">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Từ khóa (Phân cách bởi dấu phẩy)</label>
+          <input type="text" id="q-keywords-input" placeholder="Ví dụ: capital, history, asia">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Mảng lưu trữ toàn bộ các câu hỏi trong ngân hàng câu hỏi lấy từ server
+    let allQuestions = [];
+    // Biến lưu ID của câu hỏi đang được chỉnh sửa (nếu đang ở chế độ sửa, ngược lại là null)
+    let currentEditId = null;
+
+    // Sự kiện DOMContentLoaded: Gọi hàm fetchQuestions sau khi trang HTML tải xong
+    document.addEventListener('DOMContentLoaded', fetchQuestions);
+
+    // Hàm gọi API lấy danh sách toàn bộ các câu hỏi
+    function fetchQuestions() {
+      fetch('/question')
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            allQuestions = res.data; // Lưu dữ liệu vào mảng allQuestions
+            renderQuestions(allQuestions); // Hiển thị câu hỏi ra màn hình
+          } else {
+            alert('Lỗi: ' + res.message);
+          }
+        });
+    }
+
+    // Hàm hiển thị danh sách câu hỏi lên giao diện
+    function renderQuestions(list) {
+      const grid = document.getElementById('questions-grid');
+      if (list.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; color: #888;">Không có câu hỏi nào trong ngân hàng.</p>';
+        return;
+      }
+
+      // Duyệt qua từng câu hỏi trong mảng và tạo HTML tương ứng
+      grid.innerHTML = list.map((q, idx) => `
+        <div class="question-card">
+          <h4>Câu hỏi: ${q.text}</h4>
+          <ul class="options-list">
+            ${q.options.map((opt, oIdx) => {
+              // Kiểm tra xem phương án hiện tại có phải là đáp án đúng hay không
+              const isCorrect = oIdx === q.correctAnswerIndex;
+              // Nếu đúng, thêm class 'correct' và ký tự checkmark '✓ '
+              return `<li class="option-item ${isCorrect ? 'correct' : ''}">${isCorrect ? '✓ ' : ''}${opt}</li>`;
+            }).join('')}
+          </ul>
+          <div class="question-footer">
+            <div>Từ khóa: ${q.keywords && q.keywords.length > 0 ? q.keywords.join(', ') : 'Trống'}</div>
+            <div class="actions-group">
+              <!-- Nhấn nút Sửa sẽ mở Modal với ID của câu hỏi -->
+              <button class="btn-link" onclick="openEditModal('${q._id}')">Sửa</button>
+              <!-- Nhấn nút Xóa sẽ gọi hàm deleteQuestion -->
+              <button class="btn-link btn-link-danger" onclick="deleteQuestion('${q._id}')">Xóa</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Modal Control: Mở modal ở chế độ Tạo mới câu hỏi
+    function openCreateModal() {
+      currentEditId = null; // Reset ID sửa về null
+      document.getElementById('modal-title-text').textContent = 'Tạo Câu Hỏi Mới';
+      document.getElementById('q-form').reset(); // Reset form nhập liệu
+      document.getElementById('q-modal').style.display = 'flex'; // Hiển thị modal
+    }
+
+    // Modal Control: Mở modal ở chế độ Chỉnh sửa câu hỏi hiện có
+    function openEditModal(id) {
+      // Tìm câu hỏi trong mảng cục bộ dựa trên ID
+      const q = allQuestions.find(item => item._id === id);
+      if (!q) return;
+
+      currentEditId = id; // Gán ID câu hỏi đang chỉnh sửa
+      document.getElementById('modal-title-text').textContent = 'Sửa Câu Hỏi';
+      
+      // Điền nội dung câu hỏi và các phương án tương ứng vào ô nhập liệu
+      document.getElementById('q-text-input').value = q.text;
+      document.getElementById('opt-0').value = q.options[0] || '';
+      document.getElementById('opt-1').value = q.options[1] || '';
+      document.getElementById('opt-2').value = q.options[2] || '';
+      document.getElementById('opt-3').value = q.options[3] || '';
+      
+      // Đánh dấu nút radio đáp án đúng tương ứng
+      const radio = document.querySelector(`input[name="correct-opt"][value="${q.correctAnswerIndex}"]`);
+      if (radio) radio.checked = true;
+      
+      // Hiển thị các từ khóa phân tách bởi dấu phẩy
+      document.getElementById('q-keywords-input').value = q.keywords ? q.keywords.join(', ') : '';
+      document.getElementById('q-modal').style.display = 'flex';
+    }
+
+    // Đóng Modal
+    function closeModal() {
+      document.getElementById('q-modal').style.display = 'none';
+    }
+
+    // Lắng nghe sự kiện submit form để tạo mới/chỉnh sửa câu hỏi
+    document.getElementById('q-form').addEventListener('submit', function(e) {
+      e.preventDefault(); // Ngăn trình duyệt reload trang
+      const text = document.getElementById('q-text-input').value.trim();
+      const options = [
+        document.getElementById('opt-0').value.trim(),
+        document.getElementById('opt-1').value.trim(),
+        document.getElementById('opt-2').value.trim(),
+        document.getElementById('opt-3').value.trim()
+      ];
+      // Lấy chỉ mục đáp án đúng từ input radio được chọn
+      const correctAnswerIndex = parseInt(document.querySelector('input[name="correct-opt"]:checked').value);
+      
+      // Xử lý các từ khóa: tách theo dấu phẩy, loại bỏ khoảng trắng và lọc bỏ phần tử rỗng
+      const keywordsRaw = document.getElementById('q-keywords-input').value;
+      const keywords = keywordsRaw ? keywordsRaw.split(',').map(s => s.trim()).filter(s => s) : [];
+
+      const bodyData = { text, options, correctAnswerIndex, keywords };
+      
+      // Nếu có currentEditId thì gọi API PUT để cập nhật, ngược lại gọi POST để tạo mới
+      const url = currentEditId ? `/question/${currentEditId}` : '/question';
+      const method = currentEditId ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData)
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          closeModal(); // Đóng modal
+          fetchQuestions(); // Tải lại danh sách câu hỏi mới nhất
+        } else {
+          alert('Lỗi: ' + res.message);
+        }
+      });
+    });
+
+    // Lắng nghe sự kiện input tìm kiếm để lọc câu hỏi trực tiếp trên client
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      const val = e.target.value.toLowerCase();
+      // Tìm theo nội dung câu hỏi hoặc tìm trong mảng keywords
+      const filtered = allQuestions.filter(q => 
+        q.text.toLowerCase().includes(val) || 
+        (q.keywords && q.keywords.some(kw => kw.toLowerCase().includes(val)))
+      );
+      renderQuestions(filtered); // Render danh sách câu hỏi đã lọc
+    });
+
+    // Hàm gọi API xóa câu hỏi khỏi hệ thống
+    function deleteQuestion(id) {
+      if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi hệ thống? Thao tác này cũng gỡ bỏ câu hỏi khỏi mọi bộ Quiz.')) {
+        fetch('/question/' + id, { method: 'DELETE' })
+          .then(res => res.json())
+          .then(res => {
+            if (res.success) {
+              fetchQuestions(); // Tải lại danh sách câu hỏi
+            } else {
+              alert('Lỗi: ' + res.message);
+            }
+          });
+      }
+    }
+  </script>
+</body>
+</html>
