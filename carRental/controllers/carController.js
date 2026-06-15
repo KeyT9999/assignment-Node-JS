@@ -153,6 +153,73 @@ const deleteCar = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Lấy danh sách xe còn trống trong khoảng thời gian từ startDate đến endDate
+ * @route   GET /cars/available?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+ * @access  Public
+ */
+const getAvailableCars = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // 1. Kiểm tra sự tồn tại của query params
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp startDate và endDate (dạng YYYY-MM-DD)",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // 2. Kiểm tra ngày hợp lệ
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Ngày tháng không hợp lệ. Định dạng: YYYY-MM-DD",
+      });
+    }
+
+    if (end <= start) {
+      return res.status(400).json({
+        success: false,
+        message: "Ngày kết thúc phải sau ngày bắt đầu",
+      });
+    }
+
+    // 3. Tìm tất cả các xe bị trùng lịch trong khoảng thời gian yêu cầu
+    const Booking = require("../models/bookingModel");
+    const overlappingBookings = await Booking.find({
+      startDate: { $lt: end },
+      endDate: { $gt: start },
+    });
+
+    // Tạo tập hợp các biển số xe đã có lịch đặt trùng
+    const bookedCarNumbers = overlappingBookings.map((b) => b.carNumber);
+
+    // 4. Tìm các xe:
+    //    - Không nằm trong danh sách xe đã được đặt
+    //    - Không ở trạng thái "maintenance"
+    const availableCars = await Car.find({
+      carNumber: { $nin: bookedCarNumbers },
+      status: { $ne: "maintenance" },
+    });
+
+    res.status(200).json({
+      success: true,
+      count: availableCars.length,
+      data: availableCars,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi kiểm tra xe có sẵn",
+      error: error.message,
+    });
+  }
+};
+
 // Xuất các phương thức ra ngoài để định tuyến sử dụng
 module.exports = {
   getAllCars,
@@ -160,4 +227,5 @@ module.exports = {
   createCar,
   updateCar,
   deleteCar,
+  getAvailableCars,
 };

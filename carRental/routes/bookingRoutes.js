@@ -12,6 +12,7 @@ const {
   createBooking,
   updateBooking,
   deleteBooking,
+  cancelBooking,
 } = require("../controllers/bookingController");
 
 // Định nghĩa các route cho tài nguyên "/bookings" (sử dụng tiền tố này khi import ở server.js)
@@ -26,6 +27,10 @@ router.route("/:bookingId")
   .get(getBookingById)   // GET: Xem chi tiết một đơn đặt xe theo ID (MongoDB ObjectId)
   .put(updateBooking)    // PUT: Chỉnh sửa thông tin đơn đặt xe (cập nhật lại thời gian, biển số xe)
   .delete(deleteBooking); // DELETE: Xóa đơn đặt xe khỏi hệ thống (đồng thời cập nhật lại trạng thái xe nếu cần)
+
+// Route: "/:bookingId/cancel" (Hủy đơn đặt xe)
+router.route("/:bookingId/cancel")
+  .post(cancelBooking);
 
 // Export router để sử dụng trong server.js
 module.exports = router;

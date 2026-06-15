@@ -12,6 +12,7 @@ const {
   createCar,
   updateCar,
   deleteCar,
+  getAvailableCars,
 } = require("../controllers/carController");
 
 // Định nghĩa các route cho tài nguyên "/cars" (sử dụng tiền tố này khi import ở server.js)
@@ -20,6 +21,9 @@ const {
 router.route("/")
   .get(getAllCars)   // GET: Lấy danh sách toàn bộ các xe trong hệ thống
   .post(createCar);  // POST: Thêm mới một chiếc xe vào hệ thống CSDL
+
+// Route: "/available" (phải đặt TRƯỚC "/:carNumber" để tránh xung đột)
+router.get("/available", getAvailableCars);
 
 // Route: "/:carNumber" (tương ứng GET/PUT/DELETE tới "/cars/:carNumber")
 router.route("/:carNumber")

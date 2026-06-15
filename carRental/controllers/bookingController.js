@@ -300,10 +300,79 @@ const deleteBooking = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Hủy đơn đặt xe (Cancel Booking) - Được phép hủy trong vòng 24h, hoàn tiền 90%
+ * @route   POST /bookings/:bookingId/cancel
+ * @access  Public
+ */
+const cancelBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+      });
+    }
+
+    // Kiểm tra thời gian hủy (trong vòng 24h từ lúc tạo)
+    const now = new Date();
+    const bookingTime = new Date(booking.createdAt);
+    const timeDiffHours = (now.getTime() - bookingTime.getTime()) / (1000 * 60 * 60);
+
+    if (timeDiffHours > 24) {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ được phép hủy booking trong vòng 24 giờ tính từ lúc đặt",
+      });
+    }
+
+    // Tính tiền hoàn lại (90% của tổng tiền)
+    const refundAmount = booking.totalAmount * 0.9;
+    const penaltyFee = booking.totalAmount - refundAmount;
+
+    // Xóa booking khỏi CSDL
+    await Booking.findByIdAndDelete(req.params.bookingId);
+
+    // Kiểm tra xem chiếc xe này còn bất kỳ lịch đặt nào khác không
+    const remainingBookings = await Booking.countDocuments({
+      carNumber: booking.carNumber,
+    });
+
+    // Nếu không còn đơn đặt xe nào khác, chuyển trạng thái xe về "available"
+    if (remainingBookings === 0) {
+      await Car.findOneAndUpdate(
+        { carNumber: booking.carNumber },
+        { status: "available" }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Đã hủy booking thành công",
+      data: {
+        bookingId: booking._id,
+        carNumber: booking.carNumber,
+        totalAmount: booking.totalAmount,
+        refundAmount: refundAmount,
+        penaltyFee: penaltyFee
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi hủy booking",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllBookings,
   getBookingById,
   createBooking,
   updateBooking,
   deleteBooking,
+  cancelBooking,
 };
