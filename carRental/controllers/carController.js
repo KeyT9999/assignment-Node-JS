@@ -12,8 +12,8 @@ const Car = require("../models/carModel");
 const getAllCars = async (req, res) => {
   try {
     // Truy vấn toàn bộ danh sách xe từ collection cars
-    const cars = await Car.find();
-    
+    const cars = await Car.find(req.query);
+
     // Phản hồi thành công với mã 200 (OK)
     res.status(200).json({
       success: true,
@@ -39,7 +39,7 @@ const getCarByNumber = async (req, res) => {
   try {
     // Tìm kiếm xe có trường carNumber khớp với param trên URL
     const car = await Car.findOne({ carNumber: req.params.carNumber });
-    
+
     // Nếu không tìm thấy xe, trả về lỗi 404
     if (!car) {
       return res.status(404).json({
@@ -47,7 +47,7 @@ const getCarByNumber = async (req, res) => {
         message: `Không tìm thấy xe với biển số: ${req.params.carNumber}`,
       });
     }
-    
+
     // Trả về thông tin chi tiết của xe với mã 200
     res.status(200).json({ success: true, data: car });
   } catch (error) {
@@ -68,7 +68,7 @@ const createCar = async (req, res) => {
   try {
     // Thêm bản ghi mới dựa trên dữ liệu gửi lên (req.body)
     const car = await Car.create(req.body);
-    
+
     // Trả về dữ liệu xe vừa tạo với mã 210 (Created)
     res.status(201).json({ success: true, data: car });
   } catch (error) {
@@ -92,12 +92,12 @@ const updateCar = async (req, res) => {
     const car = await Car.findOneAndUpdate(
       { carNumber: req.params.carNumber }, // Điều kiện tìm kiếm
       req.body,                            // Dữ liệu cần cập nhật
-      { 
+      {
         new: true,         // Yêu cầu trả về bản ghi sau khi đã sửa thay vì bản cũ
         runValidators: true // Chạy lại các validation định nghĩa trong Schema
       }
     );
-    
+
     // Nếu không tìm thấy xe để cập nhật, trả về lỗi 404
     if (!car) {
       return res.status(404).json({
@@ -105,7 +105,7 @@ const updateCar = async (req, res) => {
         message: `Không tìm thấy xe với biển số: ${req.params.carNumber}`,
       });
     }
-    
+
     // Phản hồi cập nhật thành công với mã 200
     res.status(200).json({ success: true, data: car });
   } catch (error) {
@@ -129,7 +129,7 @@ const deleteCar = async (req, res) => {
     const car = await Car.findOneAndDelete({
       carNumber: req.params.carNumber,
     });
-    
+
     // Trả về lỗi 404 nếu không tìm thấy xe để xóa
     if (!car) {
       return res.status(404).json({
@@ -137,7 +137,7 @@ const deleteCar = async (req, res) => {
         message: `Không tìm thấy xe với biển số: ${req.params.carNumber}`,
       });
     }
-    
+
     // Phản hồi xóa thành công và trả về thông tin xe vừa bị xóa
     res.status(200).json({
       success: true,

@@ -7,7 +7,7 @@ const Theater = require("../models/theaterModel");
 exports.getAllTheaters = async (req, res) => {
   try {
     // Tìm kiếm toàn bộ danh sách rạp chiếu phim từ MongoDB
-    const theaters = await Theater.find();
+    const theaters = await Theater.find(req.query);
     // Trả về dữ liệu JSON kèm mã HTTP 200 (Thành công)
     res.status(200).json(theaters);
   } catch (error) {
