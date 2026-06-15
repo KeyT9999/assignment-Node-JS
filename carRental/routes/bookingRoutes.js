@@ -28,7 +28,7 @@ router.route("/:bookingId")
   .put(updateBooking)    // PUT: Chỉnh sửa thông tin đơn đặt xe (cập nhật lại thời gian, biển số xe)
   .delete(deleteBooking); // DELETE: Xóa đơn đặt xe khỏi hệ thống (đồng thời cập nhật lại trạng thái xe nếu cần)
 
-// Route: "/:bookingId/cancel" (Hủy đơn đặt xe)
+//Cancel
 router.route("/:bookingId/cancel")
   .post(cancelBooking);
 

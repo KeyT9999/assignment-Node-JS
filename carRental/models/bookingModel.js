@@ -1,7 +1,4 @@
-// File: models/bookingModel.js
-// Chức năng: Định nghĩa cấu trúc bản ghi thuê xe (Booking) gồm ngày thuê và tổng tiền.
 
-// Import thư viện mongoose
 const mongoose = require("mongoose");
 
 // Khởi tạo Schema cho Đơn thuê xe (Booking)

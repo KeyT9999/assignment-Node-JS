@@ -74,174 +74,442 @@ Mở trình duyệt Web (Chrome, Edge, Firefox) và truy cập địa chỉ: [ht
 
 ---
 
-## 3. Kiểm Thử Bằng Postman (Postman API Testing)
+## 3. Hướng Dẫn Kiểm Thử Bằng Postman (Postman Testing Guide)
 
-Mở ứng dụng Postman lên để bắt đầu kiểm tra trực tiếp các API Endpoint của Server.
+Bạn có thể nhập hoặc tạo các Request sau trong phần mềm **Postman** để test trực tiếp các API của hệ thống:
 
-### Thiết lập chung:
-* Tạo các request có **Headers**:
-  * `Content-Type`: `application/json`
+### Bước 1: Khởi tạo biến trong Postman
+Tạo biến toàn cục `url` trong Postman trỏ tới địa chỉ: `http://localhost:3000`.
+
+### Bước 2: Thiết lập Request Body
+Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** -> chọn định dạng **JSON** để truyền dữ liệu.
 
 ---
 
-### Kịch bản 1: Lấy danh sách toàn bộ Lịch Chiếu (Schedules)
-Dùng để lấy danh sách các suất chiếu và xem thông tin (Tên phim, Rạp, Giá vé, Số ghế trống hiện tại).
-* **HTTP Method:** `GET`
-* **URL:** `http://localhost:3000/schedules`
-* **Headers:** `Content-Type: application/json`
-* **Response mong đợi (Status 200 OK):**
-```json
-[
+### Bước 3: Gửi các request kiểm thử
+
+#### A. Quản lý Rạp Chiếu Phim (Theaters)
+
+##### 1. Thêm rạp chiếu phim mới (POST /theaters)
+* **Method:** `POST`
+* **URL:** `{{url}}/theaters`
+* **Body (JSON):**
+  ```json
   {
-    "_id": "647f2a1b9f7123abcd000001",
-    "movieName": "Inception",
-    "theaterName": "Cineplex Downtown",
-    "showTime": "2026-06-11T13:00:00.000Z",
-    "ticketPrice": 12.5,
-    "availableSeats": 100,
-    "__v": 0
-  },
-  {
-    "_id": "647f2a1b9f7123abcd000002",
-    "movieName": "Avatar: The Way of Water",
     "theaterName": "Megaplex Midtown",
-    "showTime": "2026-06-11T13:00:00.000Z",
-    "ticketPrice": 15.0,
-    "availableSeats": 80,
-    "__v": 0
+    "location": "456 Broadway Ave",
+    "seatCapacity": 120,
+    "screenType": "IMAX",
+    "amenities": ["Dolby Atmos", "Recliner Seats", "Popcorn Bar"]
   }
-]
-```
+  ```
+* **Kết quả kỳ vọng (201 Created):** Trả về thông tin rạp chiếu phim đã được tạo thành công trong MongoDB.
+
+##### 2. Lấy danh sách toàn bộ rạp chiếu phim (GET /theaters)
+* **Method:** `GET`
+* **URL:** `{{url}}/theaters`
+* **Kết quả kỳ vọng (200 OK):** Trả về mảng chứa danh sách rạp chiếu phim.
+
+---
+
+#### B. Quản lý Lịch Chiếu Phim (Schedules)
+
+##### 1. Tạo lịch chiếu phim mới (POST /schedules)
+* **Method:** `POST`
+* **URL:** `{{url}}/schedules`
+* **Body (JSON):**
+  ```json
+  {
+    "movieName": "Interstellar",
+    "theaterName": "Megaplex Midtown",
+    "showTime": "2026-06-12T19:00:00.000Z",
+    "ticketPrice": 14.5,
+    "availableSeats": 120
+  }
+  ```
+* **Kết quả kỳ vọng (201 Created):** Trả về thông tin lịch chiếu đã được tạo.
+
+##### 2. Lấy danh sách toàn bộ lịch chiếu phim (GET /schedules)
+* **Method:** `GET`
+* **URL:** `{{url}}/schedules`
+* **Kết quả kỳ vọng (200 OK):** Trả về danh sách toàn bộ các lịch chiếu phim hiện có.
 *(Hãy sao chép các thông tin `theaterName`, `movieName`, `showTime` từ Response này để sử dụng làm Body cho request đặt vé ở bước sau).*
 
----
-
-### Kịch bản 2: Đặt vé xem phim mới (POST)
-Gửi yêu cầu đặt vé cho khách hàng.
-* **HTTP Method:** `POST`
-* **URL:** `http://localhost:3000/bookings`
-* **Headers:** `Content-Type: application/json`
-* **Body (dạng JSON Raw):**
-```json
-{
-  "customerName": "Tran Kim Thang",
-  "theaterName": "Cineplex Downtown",
-  "movieName": "Inception",
-  "showTime": "2026-06-11T13:00:00.000Z",
-  "numberOfTickets": 3
-}
-```
-*(Lưu ý: Giá trị `showTime` phải trùng khớp định dạng chuỗi ISO Date trả về từ API lấy lịch chiếu).*
-
-* **Response mong đợi (Status 201 Created):**
-```json
-{
-  "_id": "647f2c8d9f7123abcd000099",
-  "customerName": "Tran Kim Thang",
-  "theaterName": "Cineplex Downtown",
-  "movieName": "Inception",
-  "showTime": "2026-06-11T13:00:00.000Z",
-  "numberOfTickets": 3,
-  "totalAmount": 37.5,
-  "__v": 0
-}
-```
-> **Kiểm tra tính logic:** Lúc này, nếu bạn chạy lại API `GET /schedules`, trường `availableSeats` của phim *Inception* tại rạp *Cineplex Downtown* phải giảm từ `100` xuống còn `97`.
-
----
-
-### Kịch bản 3: Đặt vé lỗi do không đủ ghế trống (POST Validation)
-* **HTTP Method:** `POST`
-* **URL:** `http://localhost:3000/bookings`
-* **Headers:** `Content-Type: application/json`
-* **Body (Đặt quá số ghế khả dụng):**
-```json
-{
-  "customerName": "Nguyen Van A",
-  "theaterName": "Cineplex Downtown",
-  "movieName": "Inception",
-  "showTime": "2026-06-11T13:00:00.000Z",
-  "numberOfTickets": 200
-}
-```
-* **Response mong đợi (Status 400 Bad Request):**
-```json
-{
-  "message": "Not enough available seats"
-}
-```
-
----
-
-### Kịch bản 4: Lấy danh sách toàn bộ vé đã đặt (GET)
-* **HTTP Method:** `GET`
-* **URL:** `http://localhost:3000/bookings`
-* **Response mong đợi (Status 200 OK):**
-```json
-[
+##### 3. Tìm kiếm phim theo rạp và giờ chiếu (GET /schedules/search)
+Tìm các bộ phim có cùng rạp chiếu và giờ chiếu cụ thể.
+* **Method:** `GET`
+* **URL:** `{{url}}/schedules/search?theaterName=Megaplex Midtown&showTime=2026-06-12T19:00:00.000Z`
+* **Kết quả kỳ vọng (200 OK):**
+  ```json
   {
-    "_id": "647f2c8d9f7123abcd000099",
-    "customerName": "Tran Kim Thang",
-    "theaterName": "Cineplex Downtown",
-    "movieName": "Inception",
-    "showTime": "2026-06-11T13:00:00.000Z",
-    "numberOfTickets": 3,
-    "totalAmount": 37.5,
-    "__v": 0
+    "success": true,
+    "count": 1,
+    "theaterName": "Megaplex Midtown",
+    "showTime": "2026-06-12T19:00:00.000Z",
+    "movies": [
+      {
+        "movieName": "Interstellar",
+        "ticketPrice": 14.5,
+        "availableSeats": 120
+      }
+    ]
   }
-]
-```
-*(Hãy sao chép giá trị `_id` của đơn đặt vé vừa tạo - ví dụ `"647f2c8d9f7123abcd000099"` - để làm tham số cho API PUT và DELETE).*
+  ```
 
 ---
 
-### Kịch bản 5: Chỉnh sửa thay đổi số vé đã đặt (PUT)
-Sử dụng ID đơn đặt vé lấy được từ API GET trước để cập nhật thay đổi số lượng vé từ `3` vé lên `5` vé.
-* **HTTP Method:** `PUT`
-* **URL:** `http://localhost:3000/bookings/647f2c8d9f7123abcd000099` (Thay ID thật của bạn vào cuối URL)
-* **Headers:** `Content-Type: application/json`
-* **Body (dạng JSON Raw):**
-```json
-{
-  "customerName": "Tran Kim Thang (Updated)",
-  "theaterName": "Cineplex Downtown",
-  "movieName": "Inception",
-  "showTime": "2026-06-11T13:00:00.000Z",
-  "numberOfTickets": 5
-}
-```
-* **Response mong đợi (Status 200 OK):**
-```json
-{
-  "_id": "647f2c8d9f7123abcd000099",
-  "customerName": "Tran Kim Thang (Updated)",
-  "theaterName": "Cineplex Downtown",
-  "movieName": "Inception",
-  "showTime": "2026-06-11T13:00:00.000Z",
-  "numberOfTickets": 5,
-  "totalAmount": 62.5,
-  "__v": 0
-}
-```
-> **Kiểm tra tính logic:** Vì số lượng vé tăng từ `3` lên `5` (chênh lệch `+2`), số ghế trống của lịch chiếu Inception tại rạp Cineplex Downtown giờ đây phải giảm tiếp thêm 2 ghế nữa, tức là từ `97` xuống còn `95`. Hãy gọi `GET /schedules` để kiểm tra.
+#### C. Quản lý Đặt Vé (Bookings)
+
+##### 1. Đặt vé xem phim mới (POST /bookings)
+* **Method:** `POST`
+* **URL:** `{{url}}/bookings`
+* **Body (JSON):**
+  ```json
+  {
+    "customerName": "Tran Kim Thang",
+    "theaterName": "Megaplex Midtown",
+    "movieName": "Interstellar",
+    "showTime": "2026-06-12T19:00:00.000Z",
+    "numberOfTickets": 3
+  }
+  ```
+* **Kết quả kỳ vọng (201 Created):**
+  * Server tính tổng số tiền: `3 * 14.5 = 43.5`.
+  * Trả về thông tin đặt vé thành công.
+  * Số ghế trống (`availableSeats`) trong lịch chiếu giảm từ `120` xuống còn `117`.
+  * Lưu lại giá trị `_id` của đơn booking vừa trả về để thực hiện sửa/xóa ở bước sau.
+
+##### 2. Lấy danh sách toàn bộ vé đã đặt (GET /bookings)
+* **Method:** `GET`
+* **URL:** `{{url}}/bookings`
+* **Kết quả kỳ vọng (200 OK):** Trả về mảng chứa danh sách các đơn đặt vé.
+
+##### 3. Đặt vé lỗi do không đủ ghế trống (POST /bookings - Validation)
+* **Method:** `POST`
+* **URL:** `{{url}}/bookings`
+* **Body (JSON - Đặt vượt quá số ghế còn lại):**
+  ```json
+  {
+    "customerName": "Nguyen Van A",
+    "theaterName": "Megaplex Midtown",
+    "movieName": "Interstellar",
+    "showTime": "2026-06-12T19:00:00.000Z",
+    "numberOfTickets": 200
+  }
+  ```
+* **Kết quả kỳ vọng (400 Bad Request):**
+  ```json
+  {
+    "message": "Not enough available seats"
+  }
+  ```
+
+##### 4. Chỉnh sửa thay đổi số vé đã đặt (PUT /bookings/:bookingId)
+* **Method:** `PUT`
+* **URL:** `{{url}}/bookings/<bookingId>` *(Điền ID thực tế thu được ở bước tạo booking)*
+* **Body (JSON) - Thay đổi số lượng vé (ví dụ tăng từ 3 lên 5 vé):**
+  ```json
+  {
+    "customerName": "Tran Kim Thang (Updated)",
+    "theaterName": "Megaplex Midtown",
+    "movieName": "Interstellar",
+    "showTime": "2026-06-12T19:00:00.000Z",
+    "numberOfTickets": 5
+  }
+  ```
+* **Kết quả kỳ vọng (200 OK):**
+  * Tổng số tiền được tính lại: `5 * 14.5 = 72.5`.
+  * Số ghế trống của lịch chiếu phim được cập nhật tương ứng (giảm tiếp 2 ghế từ `117` xuống còn `115`).
+
+##### 5. Hủy đơn đặt vé (DELETE /bookings/:bookingId)
+* **Method:** `DELETE`
+* **URL:** `{{url}}/bookings/<bookingId>` *(Điền ID thực tế)*
+* **Kết quả kỳ vọng (200 OK):**
+  ```json
+  {
+    "message": "Booking deleted successfully"
+  }
+  ```
+  * Số ghế trống của lịch chiếu phim được hoàn lại đầy đủ (từ `115` tăng lại về `120`).
 
 ---
 
-### Kịch bản 6: Hủy đặt vé (DELETE)
-Hủy bỏ đơn đặt vé và trả lại ghế trống cho lịch chiếu phim.
-* **HTTP Method:** `DELETE`
-* **URL:** `http://localhost:3000/bookings/647f2c8d9f7123abcd000099` (Thay ID thật của bạn vào cuối URL)
-* **Response mong đợi (Status 200 OK):**
+## 4. Cách Import Nhanh Vào Postman (Postman Collection JSON)
+
+Để không phải tự tay nhập thủ công từng Request và Body, bạn có thể sử dụng tính năng **Import** của Postman:
+
+1. Copy toàn bộ đoạn JSON bên dưới.
+2. Mở phần mềm **Postman**, chọn nút **Import** ở góc trên cùng bên trái.
+3. Chuyển sang tab **Raw text** (hoặc dán thẳng vào ô nhập liệu của Import).
+4. Dán nội dung JSON đã copy vào và nhấn **Import** để tạo Collection tên `MovieBooking API Collection`.
+5. Mặc định biến `url` trong Collection đã được thiết lập sẵn là `http://localhost:3000` (hoặc port chạy dự án của bạn). Bạn có thể thay đổi bằng cách click vào Collection -> Chọn tab **Variables**.
+
 ```json
 {
-  "message": "Booking deleted successfully"
+  "info": {
+    "_postman_id": "4e75d045-8f6a-4d92-bf3c-35cd29efb925",
+    "name": "MovieBooking API Collection",
+    "description": "Bộ sưu tập API cho dịch vụ Đặt vé xem phim (MovieBooking) dùng để kiểm thử nhanh trên Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Quản lý Rạp chiếu (Theaters)",
+      "item": [
+        {
+          "name": "Lấy danh sách rạp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/theaters",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "theaters"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Thêm rạp chiếu phim mới",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"theaterName\": \"Megaplex Midtown\",\n  \"location\": \"456 Broadway Ave\",\n  \"seatCapacity\": 120,\n  \"screenType\": \"IMAX\",\n  \"amenities\": [\"Dolby Atmos\", \"Recliner Seats\", \"Popcorn Bar\"]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/theaters",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "theaters"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Quản lý Lịch chiếu (Schedules)",
+      "item": [
+        {
+          "name": "Lấy danh sách lịch chiếu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/schedules",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "schedules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tạo lịch chiếu mới",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieName\": \"Interstellar\",\n  \"theaterName\": \"Megaplex Midtown\",\n  \"showTime\": \"2026-06-12T19:00:00.000Z\",\n  \"ticketPrice\": 14.5,\n  \"availableSeats\": 120\n}"
+            },
+            "url": {
+              "raw": "{{url}}/schedules",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "schedules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tìm kiếm phim theo rạp và giờ chiếu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/schedules/search?theaterName=Megaplex Midtown&showTime=2026-06-12T19:00:00.000Z",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "schedules",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "theaterName",
+                  "value": "Megaplex Midtown"
+                },
+                {
+                  "key": "showTime",
+                  "value": "2026-06-12T19:00:00.000Z"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Quản lý Đặt vé (Bookings)",
+      "item": [
+        {
+          "name": "Lấy danh sách vé đã đặt",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/bookings",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Đặt vé xem phim mới thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Tran Kim Thang\",\n  \"theaterName\": \"Megaplex Midtown\",\n  \"movieName\": \"Interstellar\",\n  \"showTime\": \"2026-06-12T19:00:00.000Z\",\n  \"numberOfTickets\": 3\n}"
+            },
+            "url": {
+              "raw": "{{url}}/bookings",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Đặt vé lỗi do không đủ ghế trống",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Nguyen Van A\",\n  \"theaterName\": \"Megaplex Midtown\",\n  \"movieName\": \"Interstellar\",\n  \"showTime\": \"2026-06-12T19:00:00.000Z\",\n  \"numberOfTickets\": 200\n}"
+            },
+            "url": {
+              "raw": "{{url}}/bookings",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cập nhật đơn đặt vé (Đổi vé)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Tran Kim Thang (Updated)\",\n  \"theaterName\": \"Megaplex Midtown\",\n  \"movieName\": \"Interstellar\",\n  \"showTime\": \"2026-06-12T19:00:00.000Z\",\n  \"numberOfTickets\": 5\n}"
+            },
+            "url": {
+              "raw": "{{url}}/bookings/CHANGE_TO_BOOKING_ID",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings",
+                "CHANGE_TO_BOOKING_ID"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Hủy đặt vé",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/bookings/CHANGE_TO_BOOKING_ID",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings",
+                "CHANGE_TO_BOOKING_ID"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
 }
 ```
-> **Kiểm tra tính logic:** Sau khi hủy thành công vé 5 ghế này, gọi lại API `GET /schedules` để xác minh số ghế trống của lịch chiếu Inception tại rạp Cineplex Downtown đã được cộng trả lại thành công từ `95` lên lại `100` ghế trống ban đầu.
 
 ---
 
-## 4. Giải Thích Luồng Nghiệp Vụ Chính (Business Logic Flow)
+## 5. Giải Thích Luồng Nghiệp Vụ Chính (Business Logic Flow)
 
 Dự án tuân theo kiến trúc MVC đơn giản kết hợp cơ sở dữ liệu MongoDB:
 1. **Khởi chạy ứng dụng (`server.js`)**: Kết nối MongoDB -> Tự động nạp trước các tài liệu rạp phim và lịch chiếu mẫu vào Database nếu chưa có sẵn.

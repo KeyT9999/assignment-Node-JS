@@ -93,7 +93,9 @@ Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** 
 
 ### Bước 3: Gửi các request kiểm thử
 
-#### 1. Thêm xe mới (POST /cars)
+#### A. Quản lý Xe (Cars)
+
+##### 1. Thêm xe mới (POST /cars)
 * **Method:** `POST`
 * **URL:** `{{url}}/cars`
 * **Body (JSON):**
@@ -108,12 +110,40 @@ Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** 
   ```
 * **Kết quả kỳ vọng (201 Created):** Trả về thông tin xe đã được tạo thành công trong MongoDB.
 
-#### 2. Lấy danh sách toàn bộ xe (GET /cars)
+##### 2. Lấy danh sách toàn bộ xe (GET /cars)
 * **Method:** `GET`
 * **URL:** `{{url}}/cars`
 * **Kết quả kỳ vọng (200 OK):** Trả về mảng chứa danh sách xe.
 
-#### 3. Tạo đơn thuê xe thành công (POST /bookings)
+##### 3. Lấy thông tin chi tiết của 1 xe (GET /cars/:carNumber)
+* **Method:** `GET`
+* **URL:** `{{url}}/cars/29A-888.88`
+* **Kết quả kỳ vọng (200 OK):** Trả về thông tin chi tiết của xe có biển số `29A-888.88`.
+
+##### 4. Cập nhật thông tin xe (PUT /cars/:carNumber)
+* **Method:** `PUT`
+* **URL:** `{{url}}/cars/29A-888.88`
+* **Body (JSON):**
+  ```json
+  {
+    "capacity": 7,
+    "pricePerDay": 1300000,
+    "status": "available",
+    "features": ["GPS", "Camera hành trình", "Cửa sổ trời", "Cảnh báo lệch làn"]
+  }
+  ```
+* **Kết quả kỳ vọng (200 OK):** Trả về thông tin xe đã được cập nhật thành công.
+
+##### 5. Xóa xe khỏi hệ thống (DELETE /cars/:carNumber)
+* **Method:** `DELETE`
+* **URL:** `{{url}}/cars/29A-888.88`
+* **Kết quả kỳ vọng (200 OK):** Trả về thông tin xe đã bị xóa.
+
+---
+
+#### B. Quản lý Đơn Thuê Xe (Bookings)
+
+##### 1. Tạo đơn thuê xe thành công (POST /bookings)
 * **Method:** `POST`
 * **URL:** `{{url}}/bookings`
 * **Body (JSON):**
@@ -131,7 +161,17 @@ Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** 
   * Trạng thái xe `29A-888.88` được đổi thành `rented`.
   * Lưu lại giá trị `_id` của đơn booking vừa trả về (Ví dụ: `6483fb3b1d3d...`) để thực hiện sửa/xóa ở bước sau.
 
-#### 4. Thử đặt trùng lịch xe (POST /bookings - Test Overlap)
+##### 2. Lấy danh sách toàn bộ đơn thuê xe (GET /bookings)
+* **Method:** `GET`
+* **URL:** `{{url}}/bookings`
+* **Kết quả kỳ vọng (200 OK):** Trả về mảng chứa danh sách các đơn đặt xe (xếp theo thứ tự mới nhất lên đầu).
+
+##### 3. Xem chi tiết đơn thuê xe (GET /bookings/:bookingId)
+* **Method:** `GET`
+* **URL:** `{{url}}/bookings/<bookingId>` *(Điền ID thực tế thu được ở bước tạo booking)*
+* **Kết quả kỳ vọng (200 OK):** Trả về thông tin chi tiết đơn đặt xe.
+
+##### 4. Thử đặt trùng lịch xe (POST /bookings - Test Overlap)
 * **Method:** `POST`
 * **URL:** `{{url}}/bookings`
 * **Body (JSON) - Lịch trùng đè lên khoảng ngày 15 đến 20 ở trên:**
@@ -156,9 +196,9 @@ Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** 
   }
   ```
 
-#### 5. Cập nhật đơn đặt thuê xe (PUT /bookings/:bookingId)
+##### 5. Cập nhật đơn đặt thuê xe (PUT /bookings/:bookingId)
 * **Method:** `PUT`
-* **URL:** `{{url}}/bookings/<bookingId>` *(Điền ID thực tế thu được ở bước 3)*
+* **URL:** `{{url}}/bookings/<bookingId>` *(Điền ID thực tế thu được ở bước tạo booking)*
 * **Body (JSON) - Thay đổi ngày kết thúc ngắn lại hoặc đổi tên khách hàng:**
   ```json
   {
@@ -168,7 +208,287 @@ Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** 
   ```
 * **Kết quả kỳ vọng (200 OK):** Tổng tiền được cập nhật lại tương ứng với số ngày mới (3 ngày = 3.600.000 VND).
 
-#### 6. Xóa/Hủy đơn đặt xe (DELETE /bookings/:bookingId)
+##### 6. Xóa/Hủy đơn đặt xe (DELETE /bookings/:bookingId)
 * **Method:** `DELETE`
 * **URL:** `{{url}}/bookings/<bookingId>`
 * **Kết quả kỳ vọng (200 OK):** Đơn đặt xe được xóa thành công. Khi bạn gọi lại `GET {{url}}/cars`, trạng thái của xe `29A-888.88` đã tự động khôi phục về `available` do không còn đơn booking nào khác chiếm giữ xe này.
+
+---
+
+## 4. Cách Import Nhanh Vào Postman (Postman Collection JSON)
+
+Để không phải tự tay nhập thủ công từng Request và Body, bạn có thể sử dụng tính năng **Import** của Postman:
+
+1. Copy toàn bộ đoạn JSON bên dưới.
+2. Mở phần mềm **Postman**, chọn nút **Import** ở góc trên cùng bên trái.
+3. Chuyển sang tab **Raw text** (hoặc dán thẳng vào ô nhập liệu của Import).
+4. Dán nội dung JSON đã copy vào và nhấn **Import** để tạo Collection tên `CarRental API Collection`.
+5. Mặc định biến `url` trong Collection đã được thiết lập sẵn là `http://localhost:3000` (hoặc port chạy dự án của bạn). Bạn có thể thay đổi bằng cách click vào Collection -> Chọn tab **Variables**.
+
+```json
+{
+  "info": {
+    "_postman_id": "8f3a3d5e-d2cb-46a4-9642-a1cb1c9cb44a",
+    "name": "CarRental API Collection",
+    "description": "Bộ sưu tập API cho dịch vụ thuê xe ô tô (CarRental) dùng để kiểm thử nhanh trên Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Quản lý Xe (Cars)",
+      "item": [
+        {
+          "name": "Lấy danh sách xe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/cars",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "cars"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lấy thông tin xe bằng Biển số xe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/cars/29A-888.88",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "cars",
+                "29A-888.88"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Thêm xe mới",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carNumber\": \"29A-888.88\",\n  \"capacity\": 7,\n  \"pricePerDay\": 1200000,\n  \"status\": \"available\",\n  \"features\": [\"GPS\", \"Camera hành trình\", \"Cửa sổ trời\"]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/cars",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "cars"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cập nhật thông tin xe",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 7,\n  \"pricePerDay\": 1300000,\n  \"status\": \"available\",\n  \"features\": [\"GPS\", \"Camera hành trình\", \"Cửa sổ trời\", \"Cảnh báo lệch làn\"]\n}"
+            },
+            "url": {
+              "raw": "{{url}}/cars/29A-888.88",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "cars",
+                "29A-888.88"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Xóa xe",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/cars/29A-888.88",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "cars",
+                "29A-888.88"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Quản lý Đơn thuê xe (Bookings)",
+      "item": [
+        {
+          "name": "Lấy danh sách đơn thuê xe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/bookings",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lấy thông tin chi tiết đơn thuê xe",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/bookings/CHANGE_TO_BOOKING_ID",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings",
+                "CHANGE_TO_BOOKING_ID"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tạo đơn thuê xe thành công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Trần Kim Thắng\",\n  \"carNumber\": \"29A-888.88\",\n  \"startDate\": \"2026-06-15\",\n  \"endDate\": \"2026-06-20\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/bookings",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Thử đặt trùng lịch xe (Test Overlap)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Khách hàng B\",\n  \"carNumber\": \"29A-888.88\",\n  \"startDate\": \"2026-06-18\",\n  \"endDate\": \"2026-06-22\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/bookings",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cập nhật đơn đặt thuê xe",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Trần Kim Thắng - Đã cập nhật\",\n  \"endDate\": \"2026-06-18\"\n}"
+            },
+            "url": {
+              "raw": "{{url}}/bookings/CHANGE_TO_BOOKING_ID",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings",
+                "CHANGE_TO_BOOKING_ID"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Xóa/Hủy đơn đặt xe",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{url}}/bookings/CHANGE_TO_BOOKING_ID",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "bookings",
+                "CHANGE_TO_BOOKING_ID"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
+```
