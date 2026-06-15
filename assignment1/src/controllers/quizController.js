@@ -220,7 +220,7 @@ exports.createQuestionInQuiz = async (req, res) => {
 
     // Đẩy ObjectId của câu hỏi mới tạo vào mảng `questions` của bộ Quiz hiện tại
     quiz.questions.push(question._id);
-    
+
     // Lưu lại thay đổi của bộ Quiz vào database
     await quiz.save();
 
@@ -272,10 +272,10 @@ exports.createManyQuestionsInQuiz = async (req, res) => {
 
     // Lấy ra danh sách các ObjectId của các câu hỏi vừa tạo
     const questionIds = questions.map((question) => question._id);
-    
+
     // Sử dụng toán tử spread (...) để đẩy toàn bộ danh sách ID câu hỏi vào mảng `questions` của Quiz
     quiz.questions.push(...questionIds);
-    
+
     // Lưu thay đổi của bộ Quiz vào cơ sở dữ liệu
     await quiz.save();
 

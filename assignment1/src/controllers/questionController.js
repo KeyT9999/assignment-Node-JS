@@ -13,7 +13,7 @@ const Quiz = require("../models/Quiz");
 exports.getAllQuestions = async (req, res) => {
   try {
     // Truy vấn tất cả các tài liệu (documents) trong collection questions
-    const questions = await Question.find();
+    const questions = await Question.find(req.query);
 
     // Trả về kết quả thành công với mã trạng thái 200 (OK)
     res.status(200).json({

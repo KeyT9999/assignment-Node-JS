@@ -58,7 +58,7 @@ app.get("/pages/questions", (req, res) => {
 
 // --- Định nghĩa các Route API (API Routes) ---
 app.use("/quizzes", quizRoutes);     // Gắn các API xử lý Quiz vào tiền tố đường dẫn /quizzes
-app.use("/question", questionRoutes); // Gắn các API xử lý Question vào tiền tố đường dẫn /question
+app.use("/questions", questionRoutes); // Gắn các API xử lý Question vào tiền tố đường dẫn /questions
 
 // --- Xử lý lỗi 404 (Không tìm thấy Route phù hợp) ---
 app.use((req, res) => {
