@@ -12,6 +12,7 @@ const {
   createBooking,
   updateBooking,
   deleteBooking,
+  cancelBooking,
 } = require("../controllers/bookingController");
 
 // Định nghĩa các route cho tài nguyên "/bookings" (sử dụng tiền tố này khi import ở server.js)
@@ -20,6 +21,11 @@ const {
 router.route("/")
   .get(getAllBookings)   // GET: Lấy danh sách toàn bộ các lịch sử đơn đặt xe
   .post(createBooking);  // POST: Tạo mới một đơn thuê xe (có kiểm tra lịch trùng)
+
+// Route: "/:bookingId/cancel" (tương ứng POST tới "/bookings/:bookingId/cancel")
+// LƯU Ý: Phải đặt TRƯỚC route "/:bookingId" để Express 5 không hiểu "cancel" là bookingId
+router.route("/:bookingId/cancel")
+  .post(cancelBooking);  // POST: Hủy đơn đặt xe (soft cancel, chỉ đổi trạng thái, hoàn 90% tiền)
 
 // Route: "/:bookingId" (tương ứng GET/PUT/DELETE tới "/bookings/:bookingId")
 router.route("/:bookingId")

@@ -300,10 +300,101 @@ const deleteBooking = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Hủy đơn đặt xe (Soft cancel - chỉ đổi trạng thái, không xóa)
+ *          Khách hàng được phép hủy trong vòng 24h kể từ khi tạo booking
+ *          Tiền hoàn trả = 90% tổng số tiền đã thanh toán
+ * @route   POST /bookings/:bookingId/cancel
+ * @access  Public
+ */
+const cancelBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    // 1. Tìm booking theo ID
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+      });
+    }
+
+    // 2. Kiểm tra nếu booking đã bị hủy trước đó
+    if (booking.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Booking đã được hủy trước đó",
+      });
+    }
+
+    // 3. Kiểm tra thời gian hủy: phải trong vòng 24h tính từ lúc tạo booking
+    const now = new Date();
+    const hoursSinceBooking = (now - booking.createdAt) / (1000 * 60 * 60);
+    if (hoursSinceBooking > 24) {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể hủy booking sau 24 giờ kể từ khi đặt. Đã quá thời hạn hủy cho phép.",
+        data: {
+          createdAt: booking.createdAt,
+          hoursSinceBooking: Math.round(hoursSinceBooking * 100) / 100,
+        },
+      });
+    }
+
+    // 4. Tính số tiền hoàn trả: 90% tổng tiền
+    const refundAmount = Math.round(booking.totalAmount * 0.9);
+
+    // 5. Cập nhật trạng thái booking thành "cancelled"
+    booking.status = "cancelled";
+    booking.refundAmount = refundAmount;
+    await booking.save();
+
+    // 6. Kiểm tra xe còn booking active nào khác không
+    const activeBookings = await Booking.countDocuments({
+      carNumber: booking.carNumber,
+      status: "active",
+      _id: { $ne: bookingId },
+    });
+
+    // Nếu không còn booking active nào, reset trạng thái xe về "available"
+    if (activeBookings === 0) {
+      await Car.findOneAndUpdate(
+        { carNumber: booking.carNumber },
+        { status: "available" }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Hủy booking thành công",
+      data: {
+        _id: booking._id,
+        customerName: booking.customerName,
+        carNumber: booking.carNumber,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        totalAmount: booking.totalAmount,
+        status: booking.status,
+        refundAmount: booking.refundAmount,
+        refundPercentage: "90%",
+        cancelledAt: booking.updatedAt,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi hủy booking",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllBookings,
   getBookingById,
   createBooking,
   updateBooking,
   deleteBooking,
+  cancelBooking,
 };

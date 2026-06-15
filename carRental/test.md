@@ -172,3 +172,80 @@ Với các request `POST` và `PUT`, hãy chọn tab **Body** -> chọn **raw** 
 * **Method:** `DELETE`
 * **URL:** `{{url}}/bookings/<bookingId>`
 * **Kết quả kỳ vọng (200 OK):** Đơn đặt xe được xóa thành công. Khi bạn gọi lại `GET {{url}}/cars`, trạng thái của xe `29A-888.88` đã tự động khôi phục về `available` do không còn đơn booking nào khác chiếm giữ xe này.
+
+---
+
+#### 7. Hủy đơn đặt xe - Cancel trong vòng 24h (POST /bookings/:bookingId/cancel)
+
+**Yêu cầu nghiệp vụ:**
+- Khách hàng được phép hủy booking trong vòng **24 giờ** kể từ lúc tạo booking
+- Khi hủy thành công, khách hàng được hoàn lại **90%** tổng số tiền đã thanh toán
+
+##### Bước 1: Chạy seed data
+```bash
+node seed.js
+```
+Lệnh này tạo:
+- 2 xe: `29A-888.88` (available) và `30A-111.11` (maintenance)
+- Booking 1: cũ (>24h) → không thể cancel
+- Booking 2: mới (<24h) → có thể cancel (refund 90%)
+- Booking 3: active cho xe maintenance
+
+##### Bước 2: Test hủy thành công (trong vòng 24h)
+
+* **Method:** `POST`
+* **URL:** `{{url}}/bookings/<bookingId_của_Booking_2>/cancel`
+* **Body:** *(Không cần body)*
+* **Kết quả kỳ vọng (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Hủy booking thành công",
+  "data": {
+    "_id": "...",
+    "customerName": "Trần Kim Thắng",
+    "carNumber": "29A-888.88",
+    "totalAmount": 2400000,
+    "status": "cancelled",
+    "refundAmount": 2160000,
+    "refundPercentage": "90%"
+  }
+}
+```
+
+##### Bước 3: Test hủy booking đã quá 24h
+
+* **Method:** `POST`
+* **URL:** `{{url}}/bookings/<bookingId_của_Booking_1>/cancel`
+* **Kết quả kỳ vọng (400 Bad Request):**
+```json
+{
+  "success": false,
+  "message": "Không thể hủy booking sau 24 giờ kể từ khi đặt. Đã quá thời hạn hủy cho phép."
+}
+```
+
+##### Bước 4: Test hủy booking đã hủy trước đó
+
+* **Method:** `POST`
+* **URL:** `{{url}}/bookings/<bookingId_của_Booking_2>/cancel`
+  *(Sau khi đã hủy thành công ở Bước 2)*
+* **Kết quả kỳ vọng (400 Bad Request):**
+```json
+{
+  "success": false,
+  "message": "Booking đã được hủy trước đó"
+}
+```
+
+##### Bước 5: Test hủy booking không tồn tại
+
+* **Method:** `POST`
+* **URL:** `{{url}}/bookings/6483fb3b1d3d000000000000/cancel`
+* **Kết quả kỳ vọng (404 Not Found):**
+```json
+{
+  "success": false,
+  "message": "Không tìm thấy booking"
+}
+```

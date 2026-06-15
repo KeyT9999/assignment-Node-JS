@@ -35,6 +35,18 @@ const BookingSchema = new mongoose.Schema(
       default: 0,
       min: [0, "Tổng tiền không được âm"],
     },
+    // Trạng thái đơn đặt xe: "active" (đang hiệu lực) hoặc "cancelled" (đã hủy)
+    status: {
+      type: String,
+      enum: ["active", "cancelled"],
+      default: "active",
+    },
+    // Số tiền hoàn trả khi hủy booking (nếu có)
+    refundAmount: {
+      type: Number,
+      default: 0,
+      min: [0, "Số tiền hoàn trả không được âm"],
+    },
   },
   {
     // Tự động tạoCreatedAt và updatedAt quản lý thời gian tạo/sửa đổi đơn thuê xe
