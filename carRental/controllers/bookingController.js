@@ -368,6 +368,166 @@ const cancelBooking = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Cập nhật ngày mượn xe của booking (chỉ được update trong vòng 24h kể từ lúc tạo booking)
+ *          Tính toán chênh lệch tiền: dư (giảm ngày) hoặc thiếu (tăng ngày)
+ * @route   PUT /bookings/:bookingId/update-dates
+ * @access  Public
+ */
+const updateBookingDates = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { startDate, endDate } = req.body;
+
+    // 1. Kiểm tra dữ liệu đầu vào
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp cả ngày bắt đầu (startDate) và ngày kết thúc (endDate)",
+      });
+    }
+
+    // 2. Tìm booking hiện tại
+    const existingBooking = await Booking.findById(bookingId);
+    if (!existingBooking) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy booking",
+      });
+    }
+
+    // 3. Kiểm tra thời hạn update (trong vòng 24h kể từ lúc tạo booking)
+    const now = new Date();
+    const bookingCreatedAt = new Date(existingBooking.createdAt);
+    const timeDiffHours = (now.getTime() - bookingCreatedAt.getTime()) / (1000 * 60 * 60);
+
+    if (timeDiffHours > 24) {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ được phép cập nhật ngày mượn trong vòng 24 giờ kể từ lúc tạo booking",
+        detail: {
+          bookingCreatedAt: existingBooking.createdAt,
+          currentTime: now,
+          hoursElapsed: Math.round(timeDiffHours * 100) / 100,
+        },
+      });
+    }
+
+    // 4. Parse và validate ngày mới
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Định dạng ngày không hợp lệ. Sử dụng định dạng: YYYY-MM-DD",
+      });
+    }
+
+    if (newEnd <= newStart) {
+      return res.status(400).json({
+        success: false,
+        message: "Ngày kết thúc phải sau ngày bắt đầu",
+      });
+    }
+
+    // 5. Kiểm tra xe có tồn tại không (lấy giá thuê)
+    const car = await Car.findOne({ carNumber: existingBooking.carNumber });
+    if (!car) {
+      return res.status(404).json({
+        success: false,
+        message: `Không tìm thấy xe với biển số: ${existingBooking.carNumber}`,
+      });
+    }
+
+    // 6. Kiểm tra trùng lịch với các booking khác (loại trừ booking hiện tại)
+    const overlappingBooking = await Booking.findOne({
+      carNumber: existingBooking.carNumber,
+      _id: { $ne: bookingId },
+      startDate: { $lt: newEnd },
+      endDate: { $gt: newStart },
+    });
+
+    if (overlappingBooking) {
+      return res.status(409).json({
+        success: false,
+        message: `Xe ${existingBooking.carNumber} đã được đặt trong khoảng thời gian mới này`,
+        conflictBooking: {
+          customerName: overlappingBooking.customerName,
+          startDate: overlappingBooking.startDate,
+          endDate: overlappingBooking.endDate,
+        },
+      });
+    }
+
+    // 7. Tính toán số ngày cũ và mới
+    const oldNumberOfDays = Math.ceil(
+      (new Date(existingBooking.endDate) - new Date(existingBooking.startDate)) / (1000 * 60 * 60 * 24)
+    );
+    const newNumberOfDays = Math.ceil(
+      (newEnd - newStart) / (1000 * 60 * 60 * 24)
+    );
+
+    // 8. Tính toán tổng tiền cũ và mới
+    const oldTotalAmount = existingBooking.totalAmount;
+    const newTotalAmount = newNumberOfDays * car.pricePerDay;
+
+    // 9. Tính chênh lệch tiền
+    const amountDifference = newTotalAmount - oldTotalAmount;
+
+    // Xác định trạng thái thanh toán
+    let paymentStatus;
+    if (amountDifference > 0) {
+      paymentStatus = "Thiếu tiền - Khách hàng cần thanh toán thêm";
+    } else if (amountDifference < 0) {
+      paymentStatus = "Dư tiền - Cần hoàn lại cho khách hàng";
+    } else {
+      paymentStatus = "Không thay đổi - Số tiền giữ nguyên";
+    }
+
+    // 10. Cập nhật booking trong DB
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      bookingId,
+      {
+        startDate: newStart,
+        endDate: newEnd,
+        totalAmount: newTotalAmount,
+      },
+      { new: true, runValidators: true }
+    );
+
+    // 11. Trả về kết quả
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật ngày mượn xe thành công",
+      data: updatedBooking,
+      paymentAdjustment: {
+        oldDates: {
+          startDate: existingBooking.startDate,
+          endDate: existingBooking.endDate,
+          numberOfDays: oldNumberOfDays,
+        },
+        newDates: {
+          startDate: newStart,
+          endDate: newEnd,
+          numberOfDays: newNumberOfDays,
+        },
+        pricePerDay: car.pricePerDay,
+        oldTotalAmount: oldTotalAmount,
+        newTotalAmount: newTotalAmount,
+        amountDifference: Math.abs(amountDifference),
+        paymentStatus: paymentStatus,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Lỗi khi cập nhật ngày mượn xe",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllBookings,
   getBookingById,
@@ -375,4 +535,5 @@ module.exports = {
   updateBooking,
   deleteBooking,
   cancelBooking,
+  updateBookingDates,
 };

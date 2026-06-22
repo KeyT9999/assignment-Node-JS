@@ -13,6 +13,7 @@ const {
   updateBooking,
   deleteBooking,
   cancelBooking,
+  updateBookingDates,
 } = require("../controllers/bookingController");
 
 // Định nghĩa các route cho tài nguyên "/bookings" (sử dụng tiền tố này khi import ở server.js)
@@ -31,6 +32,10 @@ router.route("/:bookingId")
 //Cancel
 router.route("/:bookingId/cancel")
   .post(cancelBooking);
+
+// Update Dates - Cập nhật ngày mượn xe (chỉ trong vòng 24h)
+router.route("/:bookingId/update-dates")
+  .put(updateBookingDates);
 
 // Export router để sử dụng trong server.js
 module.exports = router;
