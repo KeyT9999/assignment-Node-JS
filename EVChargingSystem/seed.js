@@ -85,8 +85,8 @@ const seedTestData = async () => {
     console.log("Session 2 (70% refund test): _id =", session2._id, "| startTime =", nearFuture.toISOString());
 
     
-    const pastTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); 
-    const pastEnd = new Date(pastTime.getTime() + 1 * 60 * 60 * 1000);
+    const pastTime = new Date(now.getTime() - 5 * 60 * 60 * 1000); 
+    const pastEnd = new Date(pastTime.getTime() + 1 * 60 * 60 * 1000); 
 
     const session3 = await Session.create({
       userId: customer._id,
@@ -114,6 +114,34 @@ const seedTestData = async () => {
     });
     console.log("Session 4 (already cancelled - edge case): _id =", session4._id);
 
+    
+    const activeStart = new Date(now.getTime() - 30 * 60 * 1000); 
+    const activeEnd = new Date(now.getTime() + 1 * 60 * 60 * 1000); 
+    const session5 = await Session.create({
+      userId: customer._id,
+      stationId: station2._id,
+      startTime: activeStart,
+      endTime: activeEnd,
+      energyEstimate: 22.5,
+      totalCost: 4.5,
+      status: "active"
+    });
+    console.log("Session 5 (ACTIVE - extension target): _id =", session5._id, "| endTime =", activeEnd.toISOString());
+
+    
+    const overlapStart = new Date(now.getTime() + 2 * 60 * 60 * 1000); 
+    const overlapEnd = new Date(overlapStart.getTime() + 1 * 60 * 60 * 1000); 
+    const session6 = await Session.create({
+      userId: customer._id,
+      stationId: station2._id,
+      startTime: overlapStart,
+      endTime: overlapEnd,
+      energyEstimate: 15,
+      totalCost: 3.0,
+      status: "pending"
+    });
+    console.log("Session 6 (FUTURE - causes overlap error if extended past 2h): _id =", session6._id, "| startTime =", overlapStart.toISOString());
+
     console.log("\n=== SEED COMPLETE ===");
     console.log("Customer user1 balance:", customer.balance);
     console.log("\nCopy these session IDs for Postman testing:");
@@ -121,6 +149,8 @@ const seedTestData = async () => {
     console.log("  Session 2 (70% refund - 30min away):", session2._id);
     console.log("  Session 3 (cannot cancel - past):", session3._id);
     console.log("  Session 4 (already cancelled):", session4._id);
+    console.log("  Session 5 (ACTIVE - for extension):", session5._id);
+    console.log("  Session 6 (FUTURE - at station1):", session6._id);
 
     await mongoose.disconnect();
     process.exit(0);

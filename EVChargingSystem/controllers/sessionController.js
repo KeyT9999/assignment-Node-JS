@@ -248,9 +248,138 @@ const cancelSession = async (req, res) => {
   }
 };
 
+// API gia hạn pin xạc
+const extendSession = async (req, res) => {
+  try {
+    const { newEndTime } = req.body;
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Session not found"
+      });
+    }
+
+    if (session.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You can only extend your own sessions"
+      });
+    }
+
+    // Kiểm tra trạng thái sạc (Chỉ cho phép gia hạn khi phiên sạc đang hoạt động - active)
+    if (session.status !== "active") {
+      return res.status(400).json({
+        message: `Cannot extend session with status "${session.status}". Only active sessions can be extended.`
+      });
+    }
+
+    if (!newEndTime) {
+      return res.status(400).json({
+        message: "newEndTime is required"
+      });
+    }
+
+    const newEnd = new Date(newEndTime);
+    if (isNaN(newEnd.getTime())) {
+      return res.status(400).json({
+        message: "Invalid newEndTime date format"
+      });
+    }
+
+    // Ràng buộc thời gian kết thúc mới (newEndTime) phải lớn hơn thời gian kết thúc hiện tại
+    const currentEnd = new Date(session.endTime);
+    if (newEnd.getTime() <= currentEnd.getTime()) {
+      return res.status(400).json({
+        message: "newEndTime must be greater than current endTime"
+      });
+    }
+
+    const start = new Date(session.startTime);
+
+    // Kiểm tra trùng lịch của trạm sạc với các phiên sạc khác đang hoạt động/chờ sạc
+    const overlappingSession = await Session.findOne({
+      stationId: session.stationId,
+      _id: { $ne: session._id },
+      status: { $ne: "cancelled" },
+      startTime: { $lt: newEnd },
+      endTime: { $gt: start }
+    });
+
+    if (overlappingSession) {
+      return res.status(409).json({
+        message: "Station is already booked by another session during the extended interval"
+      });
+    }
+
+    const station = await Station.findById(session.stationId);
+    if (!station) {
+      return res.status(404).json({
+        message: "Station not found"
+      });
+    }
+
+    // Tính toán lượng điện năng phát sinh và chi phí (Happy Hour giảm 30% dựa trên thời gian bắt đầu gốc)
+    const extraMs = newEnd.getTime() - currentEnd.getTime();
+    const extraHours = extraMs / (1000 * 60 * 60);
+    const extraEnergy = extraHours * 15;
+
+    const startHour = start.getHours();
+    const utcHour = start.getUTCHours();
+    const isHappyHour = (startHour >= 22 || startHour < 4) || (utcHour >= 22 || utcHour < 4);
+
+    let extraBaseCost = extraEnergy * station.pricePerKwh;
+    let extraCost = isHappyHour ? extraBaseCost * 0.7 : extraBaseCost;
+    extraCost = Number(extraCost.toFixed(2));
+
+    // Kiểm tra ví và thực hiện khấu trừ chi phí phát sinh trực tiếp vào số dư ví người dùng
+    const user = await User.findById(req.user._id);
+    if (user.balance < extraCost) {
+      return res.status(402).json({
+        message: "Insufficient balance to extend session",
+        extraCost,
+        currentBalance: user.balance
+      });
+    }
+
+    user.balance = Number((user.balance - extraCost).toFixed(2));
+    await user.save();
+
+    // Tính toán lại tổng thời lượng mới (giờ mới - giờ bắt đầu = giờ cập nhật), lượng điện năng và tổng chi phí mới
+    const newDurationMs = newEnd.getTime() - start.getTime();
+    const hoursUpdated = newDurationMs / (1000 * 60 * 60);
+    const newEnergyEstimate = Number((hoursUpdated * 15).toFixed(2));
+    const newTotalCost = Number((session.totalCost + extraCost).toFixed(2));
+
+    session.endTime = newEnd;
+    session.energyEstimate = newEnergyEstimate;
+    session.totalCost = newTotalCost;
+    await session.save();
+
+    res.status(200).json({
+      message: "Session extended successfully",
+      session,
+      billing: {
+        extraHours: Number(extraHours.toFixed(2)),
+        extraEnergy: Number(extraEnergy.toFixed(2)),
+        extraCost,
+        hoursUpdated: Number(hoursUpdated.toFixed(2)),
+        totalCost: newTotalCost,
+        remainingBalance: user.balance
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Extend session failed",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSessions,
   bookSession,
-  cancelSession
+  cancelSession,
+  extendSession
 };
+
 
