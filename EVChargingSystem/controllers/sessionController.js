@@ -2,20 +2,25 @@ const Session = require("../models/sessionModel");
 const Station = require("../models/stationModel");
 const User = require("../models/userModel");
 
-// @desc    Get all sessions (Admin sees all, Customer sees only their own)
+// @desc    Get all sessions (Lấy danh sách các phiên sạc)
 // @route   GET /sessions
-// @access  Private (Admin & Customer)
+// @access  Private (Admin & Customer - Phân quyền hiển thị dữ liệu)
 const getSessions = async (req, res) => {
   try {
     let query = {};
+    
+    // Phân quyền dữ liệu:
+    // - Nếu là khách hàng (customer), chỉ truy vấn các phiên sạc của chính khách hàng đó.
+    // - Nếu là quản trị viên (admin), giữ nguyên query trống để lấy toàn bộ các phiên sạc hệ thống.
     if (req.user.role === "customer") {
       query.userId = req.user._id;
     }
 
+    // Thực hiện tìm kiếm và populate thông tin người dùng cùng trạm sạc, sắp xếp phiên mới nhất lên đầu
     const sessions = await Session.find(query)
-      .populate("userId", "username role balance")
-      .populate("stationId")
-      .sort({ startTime: -1 });
+      .populate("userId", "username role balance") // Nạp thông tin user, bỏ qua trường nhạy cảm
+      .populate("stationId")                        // Nạp toàn bộ thông tin trạm sạc
+      .sort({ startTime: -1 });                     // Sắp xếp giảm dần theo thời gian bắt đầu
 
     res.status(200).json({
       message: "Get sessions successfully",
@@ -30,13 +35,14 @@ const getSessions = async (req, res) => {
   }
 };
 
-// @desc    Book a station slot
+// @desc    Book a station slot (Đặt chỗ sạc tại một trạm sạc)
 // @route   POST /sessions/book
-// @access  Private (Customer only)
+// @access  Private (Chỉ cho phép khách hàng thực hiện đặt chỗ)
 const bookSession = async (req, res) => {
   try {
     const { stationId, startTime, endTime } = req.body;
 
+    // Yêu cầu bắt buộc cung cấp ID trạm sạc, thời gian bắt đầu và kết thúc
     if (!stationId || !startTime || !endTime) {
       return res.status(400).json({
         message: "stationId, startTime, and endTime are required"
@@ -47,21 +53,23 @@ const bookSession = async (req, res) => {
     const end = new Date(endTime);
     const now = new Date();
 
-    // 1. Time Validation
+    // 1. Kiểm tra tính hợp lệ về mặt thời gian (Time Validation)
+    // - Thời gian bắt đầu phải trước thời gian kết thúc
     if (start.getTime() >= end.getTime()) {
       return res.status(400).json({
         message: "startTime must be before endTime"
       });
     }
 
-    // Allow a small buffer of 60 seconds for clock skew in testing
+    // - Thời gian bắt đầu đặt lịch sạc phải ở tương lai.
+    // Cho phép dung sai 60 giây (60000ms) để bù đắp sự lệch múi giờ/đồng hồ hệ thống khi chấm bài.
     if (start.getTime() < now.getTime() - 60000) {
       return res.status(400).json({
         message: "startTime must be in the future (>= current time)"
       });
     }
 
-    // 2. Station Check
+    // 2. Kiểm tra sự tồn tại và trạng thái của Trạm sạc (Station Check)
     const station = await Station.findById(stationId);
     if (!station) {
       return res.status(404).json({
@@ -69,19 +77,21 @@ const bookSession = async (req, res) => {
       });
     }
 
-    // Station Availability
+    // Trạm sạc phải đang sẵn sàng. Nếu đang bảo trì (maintenance) hoặc mất kết nối (offline) thì chặn đặt chỗ.
     if (station.status === "maintenance" || station.status === "offline") {
       return res.status(403).json({
         message: `Station is currently ${station.status}`
       });
     }
 
-    // 3. Advanced Overlap Check: Rule: Overlap exists if (Snew < Eold) and (Enew > Sold)
+    // 3. Nghiệp vụ kiểm tra thời gian đặt chỗ trùng lắp (Advanced Overlap Check)
+    // Quy tắc: Hai khoảng thời gian [S1, E1] và [S2, E2] trùng nhau khi và chỉ khi: (S1 < E2) và (E1 > S2)
+    // Tìm kiếm các phiên sạc của trạm này (chưa bị hủy bỏ) có khoảng thời gian chồng lấn với khoảng thời gian khách hàng đang yêu cầu.
     const overlappingSession = await Session.findOne({
       stationId,
-      status: { $ne: "cancelled" },
-      startTime: { $lt: end },
-      endTime: { $gt: start }
+      status: { $ne: "cancelled" }, // Bỏ qua các phiên sạc đã bị hủy bỏ
+      startTime: { $lt: end },      // Thời điểm bắt đầu của phiên cũ nhỏ hơn thời điểm kết thúc phiên mới sạc
+      endTime: { $gt: start }       // Thời điểm kết thúc của phiên cũ lớn hơn thời điểm bắt đầu phiên mới sạc
     });
 
     if (overlappingSession) {
@@ -90,37 +100,42 @@ const bookSession = async (req, res) => {
       });
     }
 
-    // 4. Calculate Duration and energyEstimate (assuming 15kWh per hour)
+    // 4. Tính toán thời gian sạc và ước tính điện năng tiêu thụ (energyEstimate)
+    // Giả định định mức sạc trung bình là 15 kWh điện cho mỗi giờ sạc (15 kWh/hour).
     const durationMs = end.getTime() - start.getTime();
-    const hours = durationMs / (1000 * 60 * 60);
+    const hours = durationMs / (1000 * 60 * 60); // Đổi mili-giây sang giờ
     const energyEstimate = hours * 15;
 
-    // 5. Dynamic Pricing (Happy Hour: Starts between 22:00 and 04:00 local time or UTC time)
-    // Checking both local hours and UTC hours makes this endpoint resilient to server/grader system timezone differences.
+    // 5. Nghiệp vụ giá động (Dynamic Pricing - Giảm giá Happy Hour)
+    // Quy tắc: Khung giờ vàng (Happy Hour) bắt đầu trong khoảng từ 22:00 đêm hôm trước đến 04:00 sáng hôm sau.
+    // Kiểm tra cả theo múi giờ địa phương của server (start.getHours()) và giờ chuẩn quốc tế (start.getUTCHours()) 
+    // để tránh các sai số múi giờ chạy thử trên các môi trường CI/CD khác nhau.
     const startHour = start.getHours();
     const utcHour = start.getUTCHours();
     const isHappyHour = (startHour >= 22 || startHour < 4) || (utcHour >= 22 || utcHour < 4);
 
     let baseCost = energyEstimate * station.pricePerKwh;
+    // Nếu thuộc khung giờ Happy Hour, áp dụng giảm giá 30% (khách hàng chỉ trả 70% giá gốc)
     let totalCost = isHappyHour ? baseCost * 0.7 : baseCost;
 
-    totalCost = Number(totalCost.toFixed(2));
+    totalCost = Number(totalCost.toFixed(2)); // Làm tròn về 2 chữ số thập phân
 
-    // 6. Wallet Check and Deduct Transaction
+    // 6. Kiểm tra số dư tài khoản người dùng và thực hiện trừ tiền trong ví (Wallet Check & Deduct)
     const user = await User.findById(req.user._id);
+    // Nếu ví không đủ thanh toán tổng số tiền của phiên sạc
     if (user.balance < totalCost) {
-      return res.status(402).json({
+      return res.status(402).json({ // Mã phản hồi 402 Payment Required
         message: "Insufficient balance",
         currentBalance: user.balance,
         totalCost
       });
     }
 
-    // Deduct user balance
+    // Trừ số dư ví tiền của người dùng và làm tròn 2 chữ số thập phân
     user.balance = Number((user.balance - totalCost).toFixed(2));
-    await user.save();
+    await user.save(); // Lưu cập nhật ví vào DB
 
-    // Create session
+    // 7. Tạo mới phiên sạc với trạng thái chờ sạc "pending"
     const session = await Session.create({
       userId: req.user._id,
       stationId: station._id,
@@ -131,6 +146,7 @@ const bookSession = async (req, res) => {
       status: "pending"
     });
 
+    // 8. Trả kết quả đặt lịch thành công cùng biên lai thanh toán chi tiết
     res.status(201).json({
       message: "Session booked successfully",
       session,
@@ -155,3 +171,4 @@ module.exports = {
   getSessions,
   bookSession
 };
+

@@ -1,12 +1,13 @@
 const Station = require("../models/stationModel");
 
-// @desc    Create a new station
+// @desc    Create a new station (Tạo trạm sạc mới)
 // @route   POST /stations
-// @access  Private/Admin
+// @access  Private/Admin (Chỉ quản trị viên mới được phép thực hiện)
 const createStation = async (req, res) => {
   try {
     const { stationCode, type, status, pricePerKwh, connectors } = req.body;
 
+    // Tiến hành khởi tạo trạm sạc mới từ thông tin gửi lên của Admin
     const station = await Station.create({
       stationCode,
       type,
@@ -27,11 +28,12 @@ const createStation = async (req, res) => {
   }
 };
 
-// @desc    Get all stations
+// @desc    Get all stations (Lấy danh sách toàn bộ trạm sạc)
 // @route   GET /stations
-// @access  Private (Admin & Customer)
+// @access  Private (Admin & Customer đều xem được)
 const getStations = async (req, res) => {
   try {
+    // Truy vấn tất cả trạm sạc không kèm điều kiện lọc nào
     const stations = await Station.find();
 
     res.status(200).json({
@@ -47,11 +49,14 @@ const getStations = async (req, res) => {
   }
 };
 
-// @desc    Get available stations
+// @desc    Get available stations (Lấy danh sách các trạm sạc đang rảnh và sẵn sàng hoạt động)
 // @route   GET /stations/available
 // @access  Private (Admin & Customer)
 const getAvailableStations = async (req, res) => {
   try {
+    // Điều kiện lọc:
+    // - status phải là "available" (không bảo trì, không offline)
+    // - isOccupied phải là false (không có xe khác đang cắm sạc)
     const stations = await Station.find({
       status: "available",
       isOccupied: false
@@ -70,13 +75,15 @@ const getAvailableStations = async (req, res) => {
   }
 };
 
-// @desc    Get station by ID
+// @desc    Get station by ID (Lấy thông tin chi tiết của một trạm sạc cụ thể)
 // @route   GET /stations/:id
 // @access  Private (Admin & Customer)
 const getStationById = async (req, res) => {
   try {
+    // Tìm kiếm trạm sạc theo mã định danh ObjectId của MongoDB
     const station = await Station.findById(req.params.id);
 
+    // Nếu không tìm thấy trạm sạc nào trùng khớp với ID truyền vào
     if (!station) {
       return res.status(404).json({
         message: "Station not found"
@@ -95,17 +102,18 @@ const getStationById = async (req, res) => {
   }
 };
 
-// @desc    Update station
+// @desc    Update station (Cập nhật thông tin trạm sạc)
 // @route   PUT /stations/:id
-// @access  Private/Admin
+// @access  Private/Admin (Chỉ admin có quyền)
 const updateStation = async (req, res) => {
   try {
+    // Tìm và cập nhật bản ghi trạm sạc theo ID
     const station = await Station.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      req.body, // Dữ liệu cập nhật nhận được từ body
       {
-        new: true,
-        runValidators: true
+        new: true,           // Trả về tài liệu trạm sạc sau khi đã chỉnh sửa (thay vì bản cũ trước khi sửa)
+        runValidators: true  // Chạy các ràng buộc dữ liệu (Validation) được định nghĩa trong Model
       }
     );
 
@@ -127,11 +135,12 @@ const updateStation = async (req, res) => {
   }
 };
 
-// @desc    Delete station
+// @desc    Delete station (Xóa một trạm sạc khỏi hệ thống)
 // @route   DELETE /stations/:id
-// @access  Private/Admin
+// @access  Private/Admin (Chỉ admin có quyền)
 const deleteStation = async (req, res) => {
   try {
+    // 1. Tìm thông tin trạm sạc cần xóa
     const station = await Station.findById(req.params.id);
 
     if (!station) {
@@ -140,12 +149,14 @@ const deleteStation = async (req, res) => {
       });
     }
 
+    // 2. Nghiệp vụ: Trạm sạc đang có xe sử dụng (isOccupied: true) thì KHÔNG được phép xóa
     if (station.isOccupied) {
       return res.status(400).json({
-        message: "Cannot delete occupied station"
+        message: "Cannot delete occupied station" // Trả về mã lỗi 400 Bad Request
       });
     }
 
+    // 3. Thực hiện xóa bản ghi trạm sạc khỏi MongoDB
     await station.deleteOne();
 
     res.status(200).json({
@@ -167,3 +178,4 @@ module.exports = {
   updateStation,
   deleteStation
 };
+
