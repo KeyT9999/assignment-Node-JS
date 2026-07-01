@@ -114,6 +114,36 @@ const seedTestData = async () => {
     });
     console.log("Session 4 (already cancelled - edge case): _id =", session4._id);
 
+    // === Session 5: active session for extend test (currently in progress) ===
+    const activeStart = new Date(now.getTime() - 30 * 60 * 1000); // 30 min ago
+    const activeEnd = new Date(now.getTime() + 1 * 60 * 60 * 1000); // 1 hour from now
+
+    const session5 = await Session.create({
+      userId: customer._id,
+      stationId: station1._id,
+      startTime: activeStart,
+      endTime: activeEnd,
+      energyEstimate: 22.5, // 1.5h * 15kWh
+      totalCost: 5.51, // ~22.5 * 0.35
+      status: "active"
+    });
+    console.log("Session 5 (active - extend test): _id =", session5._id, "| endTime =", activeEnd.toISOString());
+
+    // === Session 6: active session on same station for overlap test ===
+    const overlapStart = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2h from now
+    const overlapEnd = new Date(overlapStart.getTime() + 2 * 60 * 60 * 1000); // 2h duration
+
+    const session6 = await Session.create({
+      userId: customer._id,
+      stationId: station1._id,
+      startTime: overlapStart,
+      endTime: overlapEnd,
+      energyEstimate: 30,
+      totalCost: 7.35,
+      status: "active"
+    });
+    console.log("Session 6 (active - overlap test): _id =", session6._id, "| startTime =", overlapStart.toISOString(), "| endTime =", overlapEnd.toISOString());
+
     console.log("\n=== SEED COMPLETE ===");
     console.log("Customer user1 balance:", customer.balance);
     console.log("\nCopy these session IDs for Postman testing:");
@@ -121,6 +151,8 @@ const seedTestData = async () => {
     console.log("  Session 2 (70% refund - 30min away):", session2._id);
     console.log("  Session 3 (cannot cancel - past):", session3._id);
     console.log("  Session 4 (already cancelled):", session4._id);
+    console.log("  Session 5 (active - extend test):", session5._id);
+    console.log("  Session 6 (active - overlap test):", session6._id);
 
     await mongoose.disconnect();
     process.exit(0);

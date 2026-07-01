@@ -35,6 +35,7 @@ const sessionSchema = new mongoose.Schema({
 
   status: {
     type: String,
+    enum: ["pending", "active", "completed", "cancelled"],
     default: "pending"
   },
 

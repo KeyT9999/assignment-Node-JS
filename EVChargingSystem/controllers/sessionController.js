@@ -232,8 +232,149 @@ const cancelSession = async (req, res) => {
   }
 };
 
+// @desc    Extend a charging session
+// @route   POST /sessions/extend/:id
+// @access  Private (Customer only)
+const extendSession = async (req, res) => {
+  try {
+    const { newEndTime } = req.body;
+
+    if (!newEndTime) {
+      return res.status(400).json({
+        message: "newEndTime is required"
+      });
+    }
+
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Session not found"
+      });
+    }
+
+    // Ensure the customer owns this session
+    if (session.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You can only extend your own sessions"
+      });
+    }
+
+    // Only active sessions can be extended
+    if (session.status !== "active") {
+      return res.status(400).json({
+        message: `Cannot extend session with status "${session.status}". Only active sessions can be extended.`
+      });
+    }
+
+    const newEnd = new Date(newEndTime);
+    const oldEnd = new Date(session.endTime);
+    const start = new Date(session.startTime);
+
+    // New endTime must be greater than current endTime
+    if (newEnd.getTime() <= oldEnd.getTime()) {
+      return res.status(400).json({
+        message: "newEndTime must be greater than current endTime"
+      });
+    }
+
+    // Check overlapping with other sessions at the same station
+    // Only need to check from oldEndTime to newEndTime (the extension part)
+    const overlappingSession = await Session.findOne({
+      _id: { $ne: session._id },
+      stationId: session.stationId,
+      status: { $ne: "cancelled" },
+      startTime: { $lt: newEnd },
+      endTime: { $gt: oldEnd }
+    });
+
+    if (overlappingSession) {
+      return res.status(400).json({
+        message: "Cannot extend: overlapping with another session at this station"
+      });
+    }
+
+    // Calculate extension fee
+    // ExtraHours = (newEndTime - startTime) in hours
+    const originalDurationMs = oldEnd.getTime() - start.getTime();
+    const originalHours = originalDurationMs / (1000 * 60 * 60);
+    const newDurationMs = newEnd.getTime() - start.getTime();
+    const extraHours = newDurationMs / (1000 * 60 * 60);
+    const additionalHours = extraHours - originalHours;
+
+    const additionalEnergy = additionalHours * 15;
+
+    const station = await Station.findById(session.stationId);
+    if (!station) {
+      return res.status(404).json({
+        message: "Station not found"
+      });
+    }
+
+    // Happy Hour check (consistent with bookSession)
+    const startHour = start.getHours();
+    const utcHour = start.getUTCHours();
+    const isHappyHour = (startHour >= 22 || startHour < 4) || (utcHour >= 22 || utcHour < 4);
+
+    let extensionFee = additionalEnergy * station.pricePerKwh;
+    extensionFee = isHappyHour ? extensionFee * 0.7 : extensionFee;
+    extensionFee = Number(extensionFee.toFixed(2));
+
+    // Check balance
+    const user = await User.findById(req.user._id);
+    if (user.balance < extensionFee) {
+      return res.status(402).json({
+        message: "Insufficient balance to extend session",
+        currentBalance: user.balance,
+        extensionFee
+      });
+    }
+
+    // Deduct balance
+    user.balance = Number((user.balance - extensionFee).toFixed(2));
+    await user.save();
+
+    // Update session
+    session.endTime = newEnd;
+    session.energyEstimate = Number((extraHours * 15).toFixed(2));
+    session.totalCost = Number((session.totalCost + extensionFee).toFixed(2));
+    await session.save();
+
+    res.status(200).json({
+      message: "Session extended successfully",
+      session: {
+        _id: session._id,
+        stationId: session.stationId,
+        startTime: session.startTime,
+        oldEndTime: oldEnd,
+        newEndTime: session.endTime,
+        status: session.status,
+        totalCost: session.totalCost,
+        energyEstimate: session.energyEstimate,
+        ExtraHours: Number(extraHours.toFixed(2))
+      },
+      billing: {
+        originalHours: Number(originalHours.toFixed(2)),
+        extraHours: Number(extraHours.toFixed(2)),
+        additionalHours: Number(additionalHours.toFixed(2)),
+        additionalEnergy: Number(additionalEnergy.toFixed(2)),
+        isHappyHour,
+        pricePerKwh: station.pricePerKwh,
+        extensionFee,
+        remainingBalance: user.balance
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Extend session failed",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSessions,
   bookSession,
-  cancelSession
+  cancelSession,
+  extendSession
 };
