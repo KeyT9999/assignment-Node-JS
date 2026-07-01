@@ -167,8 +167,90 @@ const bookSession = async (req, res) => {
   }
 };
 
+// @desc    Cancel a charging session (Customer only)
+// @route   POST /sessions/cancel/:id
+// @access  Private (Customer only)
+const cancelSession = async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id);
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Session not found"
+      });
+    }
+
+    // Ensure the customer owns this session
+    if (session.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You can only cancel your own sessions"
+      });
+    }
+
+    // Only pending sessions can be cancelled
+    if (session.status !== "pending") {
+      return res.status(400).json({
+        message: `Cannot cancel session with status "${session.status}". Only pending sessions can be cancelled.`
+      });
+    }
+
+    const now = new Date();
+    const start = new Date(session.startTime);
+
+    // Cannot cancel if start time has already passed
+    if (start.getTime() <= now.getTime()) {
+      return res.status(400).json({
+        message: "Cannot cancel a session that has already started or passed"
+      });
+    }
+
+    // Calculate time difference in hours from now to startTime
+    const diffMs = start.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    let refundPercentage;
+    if (diffHours >= 2) {
+      refundPercentage = 1.0; // 100%
+    } else {
+      refundPercentage = 0.7; // 70%
+    }
+
+    const refundAmount = Number((session.totalCost * refundPercentage).toFixed(2));
+
+    // Refund money to user
+    const user = await User.findById(req.user._id);
+    user.balance = Number((user.balance + refundAmount).toFixed(2));
+    await user.save();
+
+    // Update session status
+    session.status = "cancelled";
+    session.refundAmount = refundAmount;
+    session.cancelledAt = now;
+    await session.save();
+
+    res.status(200).json({
+      message: "Session cancelled successfully",
+      session: {
+        _id: session._id,
+        status: session.status,
+        totalCost: session.totalCost,
+        refundAmount: session.refundAmount,
+        refundPercentage: Math.round(refundPercentage * 100),
+        cancelledAt: session.cancelledAt,
+        remainingBalance: user.balance
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Cancel session failed",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSessions,
-  bookSession
+  bookSession,
+  cancelSession
 };
 

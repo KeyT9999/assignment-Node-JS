@@ -375,6 +375,21 @@
 			"item": [
 				{
 					"name": "Get Sessions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.sessions && jsonData.sessions.length > 0) {",
+									"    pm.collectionVariables.set(\"sessionId\", jsonData.sessions[0]._id);",
+									"    console.log(\"Updated sessionId to: \" + jsonData.sessions[0]._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -436,6 +451,50 @@
 						"description": "Book a charging slot for a station. Requires Customer token. Uses the dynamic future times generated in pre-request script.\n- Rejects if the station is in maintenance/offline.\n- Rejects if times overlap with another booking.\n- Applies a 30% discount if start time is between 22:00 and 04:00 (Happy Hour).\n- Deducts total booking cost directly from user's balance."
 					},
 					"response": []
+				},
+				{
+					"name": "Cancel Session (Customer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.session && jsonData.session._id) {",
+									"    console.log(\"Cancelled session: \" + jsonData.session._id);",
+									"    console.log(\"Refund amount: \" + jsonData.session.refundAmount);",
+									"    console.log(\"Refund percentage: \" + jsonData.session.refundPercentage + \"%\");",
+									"    console.log(\"Remaining balance: \" + jsonData.session.remainingBalance);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sessions/cancel/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sessions",
+								"cancel",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{sessionId}}",
+									"description": "The ID of the session to cancel"
+								}
+							]
+						},
+						"description": "Cancel a pending charging session. Requires Customer token.\n\n**Refund Policy:**\n- Cancel >= 2h before start: 100% refund\n- Cancel < 2h before start: 70% refund\n- After start time: Cannot cancel\n\nOnly sessions with status 'pending' can be cancelled."
+					},
+					"response": []
 				}
 			]
 		}
@@ -483,6 +542,11 @@
 		},
 		{
 			"key": "stationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sessionId",
 			"value": "",
 			"type": "string"
 		},

@@ -1,0 +1,165 @@
+{
+	"info": {
+		"_postman_id": "cancel-api-collection-001",
+		"name": "EV Charging - Cancel API Test",
+		"description": "Postman Collection chỉ dành cho test API Cancel Charging.\n\nFlow test:\n1. Login Customer → lấy token\n2. Get Sessions → lấy sessionId\n3. Cancel Session → test refund 100% / 70% / lỗi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Login Customer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.token) {",
+							"    pm.collectionVariables.set(\"token\", jsonData.token);",
+							"    console.log(\"Saved Customer Token\");",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"user1\",\n    \"password\": \"123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9999/auth/login",
+					"host": ["http://localhost:9999"],
+					"path": ["auth", "login"]
+				},
+				"description": "Login với tài khoản customer user1 (seed data). Token tự động lưu vào biến `token`."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get Sessions",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.sessions && jsonData.sessions.length > 0) {",
+							"    pm.collectionVariables.set(\"sessionId\", jsonData.sessions[0]._id);",
+							"    console.log(\"Saved sessionId: \" + jsonData.sessions[0]._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:9999/sessions",
+					"host": ["http://localhost:9999"],
+					"path": ["sessions"]
+				},
+				"description": "Lấy danh sách sessions. Tự động lưu session đầu tiên vào biến `sessionId`."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Cancel Session (Customer)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"console.log(JSON.stringify(jsonData, null, 2));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:9999/sessions/cancel/:id",
+					"host": ["http://localhost:9999"],
+					"path": ["sessions", "cancel", ":id"],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{sessionId}}"
+						}
+					]
+				},
+				"description": "Huỷ session đang chờ (pending).\n\n**Refund Policy:**\n- Huỷ >= 2h trước giờ bắt đầu → refund 100%\n- Huỷ < 2h trước giờ bắt đầu → refund 70%\n- Đã đến/quá giờ → không được huỷ\n- Status không phải pending → không được huỷ"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sessionId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

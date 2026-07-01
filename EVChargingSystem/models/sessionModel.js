@@ -43,8 +43,8 @@ const sessionSchema = new mongoose.Schema({
   // Trạng thái của phiên sạc
   status: {
     type: String,
-    default: "pending"                              // Trạng thái mặc định ban đầu là đang chờ sạc (pending)
+    default: "pending"
   }
 });
 
-module.exports = mongoose.model("Session", sessionSchema);
+module.exports = mongoose.model("Session", sessionSchema);
