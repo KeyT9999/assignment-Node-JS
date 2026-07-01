@@ -93,7 +93,7 @@ npm start
   "carNumber": "29A-TEST01",
   "capacity": 4,
   "pricePerDay": 500000,
-  "features": ["Điều hòa", "GPS"]
+  "features": ["Điều hòa", "GPS"]      
 }
 ```
 

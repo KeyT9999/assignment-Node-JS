@@ -1,0 +1,500 @@
+{
+	"info": {
+		"_postman_id": "c62fb291-7662-4467-85b4-f06b6b7a2d8a",
+		"name": "EV Charging System API",
+		"description": "Postman Collection for Smart EV Charging Station Management System.\n\n### Prerequisites:\n1. Server running at `http://localhost:9999`\n2. MongoDB running at `mongodb://127.0.0.1:27017/EVChargingSystem`\n\n### Automatic Variable Flow:\n- **Token Auth**: Logging in as a Customer or Admin automatically updates the `token` variable, which is inherited by all secured requests.\n- **Station ID**: Creating or retrieving stations will automatically save the first station's ID to `stationId` variable for use in update, delete, and booking APIs.\n- **Dynamic Booking Times**: The Book Session request automatically generates future `startTime` and `endTime` using a Pre-request script to prevent time validation failures.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Check if the EV Charging System API is up and running."
+			},
+			"response": []
+		},
+		{
+			"name": "01. Authentication",
+			"item": [
+				{
+					"name": "Register Customer",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user_customer\",\n    \"password\": \"123\",\n    \"role\": \"customer\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new Customer account. Customer role starts with a welcome balance of $50.00."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Admin",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user_admin\",\n    \"password\": \"123\",\n    \"role\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new Admin account. Admin role has a default balance of $0.00."
+					},
+					"response": []
+				},
+				{
+					"name": "Login Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Saved Customer Token to collection variables.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user_customer\",\n    \"password\": \"123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as Customer. Updates the `token` variable automatically upon successful response."
+					},
+					"response": []
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Saved Admin Token to collection variables.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"user_admin\",\n    \"password\": \"123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as Admin. Updates the `token` variable automatically upon successful response."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02. Stations",
+			"item": [
+				{
+					"name": "Create Station (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.station && jsonData.station._id) {",
+									"    pm.collectionVariables.set(\"stationId\", jsonData.station._id);",
+									"    console.log(\"Saved Station ID: \" + jsonData.station._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"stationCode\": \"ST-\" + Math.floor(1000 + Math.random() * 9000),\n    \"type\": \"DC-Fast\",\n    \"status\": \"available\",\n    \"pricePerKwh\": 0.35,\n    \"connectors\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/stations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"stations"
+							]
+						},
+						"description": "Create a new EV Charging Station. Requires Admin token. Automatically sets `stationId` variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Stations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.stations && jsonData.stations.length > 0) {",
+									"    pm.collectionVariables.set(\"stationId\", jsonData.stations[0]._id);",
+									"    console.log(\"Updated stationId to: \" + jsonData.stations[0]._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/stations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"stations"
+							]
+						},
+						"description": "Get all EV Charging Stations. Requires a valid token. Automatically sets `stationId` to the first station in the response array."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available Stations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/stations/available",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"stations",
+								"available"
+							]
+						},
+						"description": "Get all available (non-occupied) EV Charging Stations. Requires a valid token."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Station By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/stations/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"stations",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{stationId}}",
+									"description": "The ID of the station to fetch"
+								}
+							]
+						},
+						"description": "Get specific EV Charging Station by ID. Requires a valid token."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Station (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"maintenance\",\n    \"pricePerKwh\": 0.40\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/stations/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"stations",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{stationId}}"
+								}
+							]
+						},
+						"description": "Update specific EV Charging Station details. Requires Admin token."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Station (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/stations/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"stations",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{stationId}}"
+								}
+							]
+						},
+						"description": "Delete a station by ID. Requires Admin token. Cannot delete if the station is currently occupied."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03. Sessions (Reservations)",
+			"item": [
+				{
+					"name": "Get Sessions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sessions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sessions"
+							]
+						},
+						"description": "Get sessions list. Requires a valid token.\n- Admin role returns all sessions in the database.\n- Customer role returns only their own booked sessions."
+					},
+					"response": []
+				},
+				{
+					"name": "Book Session (Customer)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate future dates in ISO format to bypass past-time validations dynamically",
+									"const now = new Date();",
+									"const start = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes in the future",
+									"const end = new Date(now.getTime() + 70 * 60 * 1000); // 1 hour 10 minutes (1-hour duration)",
+									"",
+									"pm.collectionVariables.set(\"startTime\", start.toISOString());",
+									"pm.collectionVariables.set(\"endTime\", end.toISOString());",
+									"console.log(\"Pre-request generated startTime: \" + start.toISOString() + \", endTime: \" + end.toISOString());"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"stationId\": \"{{stationId}}\",\n    \"startTime\": \"{{startTime}}\",\n    \"endTime\": \"{{endTime}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sessions/book",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sessions",
+								"book"
+							]
+						},
+						"description": "Book a charging slot for a station. Requires Customer token. Uses the dynamic future times generated in pre-request script.\n- Rejects if the station is in maintenance/offline.\n- Rejects if times overlap with another booking.\n- Applies a 30% discount if start time is between 22:00 and 04:00 (Happy Hour).\n- Deducts total booking cost directly from user's balance."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:9999",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "stationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "startTime",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "endTime",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
