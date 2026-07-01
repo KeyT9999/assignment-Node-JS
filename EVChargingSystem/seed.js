@@ -9,12 +9,12 @@ const seedTestData = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected for seeding...");
 
-    // Clear old test sessions/stations (keep users)
+    
     await Session.deleteMany({});
     await Station.deleteMany({});
     console.log("Cleared old sessions and stations.");
 
-    // Ensure test users exist
+    
     const admin = await User.findOne({ username: "admin1" });
     if (!admin) {
       await User.create({ username: "admin1", password: "123", role: "admin", balance: 0 });
@@ -31,7 +31,7 @@ const seedTestData = async () => {
       console.log("Reset user1 balance to 500");
     }
 
-    // Create stations
+    
     const station1 = await Station.create({
       stationCode: "ST-FAST-001",
       type: "FastCharge",
@@ -54,9 +54,9 @@ const seedTestData = async () => {
 
     const now = new Date();
 
-    // === Session 1: startTime > 2h from now => refund 100% ===
-    const farFuture = new Date(now.getTime() + 3 * 60 * 60 * 1000); // +3h
-    const farFutureEnd = new Date(farFuture.getTime() + 1 * 60 * 60 * 1000); // +1h duration
+    
+    const farFuture = new Date(now.getTime() + 3 * 60 * 60 * 1000); 
+    const farFutureEnd = new Date(farFuture.getTime() + 1 * 60 * 60 * 1000); 
 
     const session1 = await Session.create({
       userId: customer._id,
@@ -69,8 +69,8 @@ const seedTestData = async () => {
     });
     console.log("Session 1 (100% refund test): _id =", session1._id, "| startTime =", farFuture.toISOString());
 
-    // === Session 2: startTime < 2h from now => refund 70% ===
-    const nearFuture = new Date(now.getTime() + 30 * 60 * 1000); // +30min
+    
+    const nearFuture = new Date(now.getTime() + 30 * 60 * 1000); 
     const nearFutureEnd = new Date(nearFuture.getTime() + 1 * 60 * 60 * 1000);
 
     const session2 = await Session.create({
@@ -84,8 +84,8 @@ const seedTestData = async () => {
     });
     console.log("Session 2 (70% refund test): _id =", session2._id, "| startTime =", nearFuture.toISOString());
 
-    // === Session 3: startTime is in the past => cannot cancel ===
-    const pastTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); // -1h
+    
+    const pastTime = new Date(now.getTime() - 1 * 60 * 60 * 1000); 
     const pastEnd = new Date(pastTime.getTime() + 1 * 60 * 60 * 1000);
 
     const session3 = await Session.create({
@@ -99,7 +99,7 @@ const seedTestData = async () => {
     });
     console.log("Session 3 (cannot cancel - past): _id =", session3._id, "| startTime =", pastTime.toISOString());
 
-    // === Session 4: already cancelled (for edge case test) ===
+    
     const anotherFuture = new Date(now.getTime() + 5 * 60 * 60 * 1000);
     const anotherFutureEnd = new Date(anotherFuture.getTime() + 1 * 60 * 60 * 1000);
 
