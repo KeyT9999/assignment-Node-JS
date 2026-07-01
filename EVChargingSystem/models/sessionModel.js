@@ -36,6 +36,16 @@ const sessionSchema = new mongoose.Schema({
   status: {
     type: String,
     default: "pending"
+  },
+
+  refundAmount: {
+    type: Number,
+    default: 0
+  },
+
+  cancelledAt: {
+    type: Date,
+    default: null
   }
 });
 
