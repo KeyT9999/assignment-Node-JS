@@ -118,23 +118,3 @@ Mặc dù bước 4 đã xử lý phần lớn code, bạn nên vào các contro
    npm run seed
    npm run dev
    ```
-
----
-
-## BƯỚC 7: Xử lý các Trường thừa so với Đề bài (Fewer Fields than Template)
-Khi đề bài cụ thể có ít trường hơn so với template dự án mẫu (ví dụ: `Space` không có `name`, `User` không có `balance`, `Reservation` không có `quantityEstimate` hoặc `status`), hãy làm theo hướng dẫn dưới đây để tránh lỗi và đảm bảo bài nộp khớp hoàn toàn 100% yêu cầu đề thi:
-
-1. **Xóa trường thừa trong Model**:
-   * Vào các tệp model tương ứng (ví dụ: `spaceModel.js`, `userModel.js`, `reservationModel.js`) và xóa các định nghĩa trường thừa không được mô tả trong đề bài.
-2. **Cập nhật Controller**:
-   * Tìm và xóa các đoạn code gán hoặc validate các trường thừa này khi nhận dữ liệu từ `req.body` để lưu database (ví dụ: trường `quantityEstimate` trong hàm tạo reservation).
-   * **Lưu ý đặc biệt về Cập nhật Cú pháp Cập nhật (`updateSpace`/`updateStation`)**: Hãy nhớ xóa cả các dòng kiểm tra trường thừa trong controller. Ví dụ: `if (name !== undefined) resource.name = name;` $\rightarrow$ nếu schema không còn `name` thì phải xóa dòng này để tránh lỗi `ReferenceError`.
-3. **Cập nhật dữ liệu mẫu (Seed Data)**:
-   * Vào tệp `utils/seedData.js`, xóa toàn bộ các thuộc tính thừa này khỏi các đối tượng dữ liệu mẫu để tránh lỗi validate schema khi chạy lệnh `npm run seed`.
-4. **Đồng bộ hóa các Helper / Utility**:
-   * **Hàm `checkOverlap`**: Khi sửa đổi schema, các trường như `resourceId` đổi thành `spaceId`/`stationId`. Hãy cập nhật tệp [checkOverlap.js](file:///d:/Assignment_NodeJS/TranKimThang_coworkingBooking/utils/checkOverlap.js) để require trực tiếp model mới (`Reservation` hoặc `Session`), nhận đúng ID tương ứng (`spaceId` hoặc `stationId`), và thực hiện truy vấn chính xác (bỏ các điều kiện trường không tồn tại trong schema như `status: { $ne: 'cancelled' }`).
-   * **Hàm `calculatePrice`**: Cần lưu ý tên thuộc tính truyền vào và giải nén. Ví dụ: Hàm giải nén `{ pricePerUnit }`, thì khi gọi hàm ở Controller ta phải truyền đúng `pricePerUnit: resource.pricePerHour` (hoặc `pricePerUnit: resource.pricePerKwh`), tránh truyền sai tên thuộc tính như `pricePerHour: resource.pricePerHour` vì sẽ khiến giá trị nhận được là `undefined` và dẫn đến kết quả tính tổng tiền bị `NaN`.
-5. **Đồng bộ hóa các tệp Routes & server.js**:
-   * Đổi đường dẫn `require` ở `server.js` và các file `Routes` trỏ chính xác đến các file Controller mới sau khi đã đổi tên (ví dụ: `spaceController.js` và `reservationController.js`).
-   * Đảm bảo các hàm callback được destructure trong file Routes phải khớp 100% với tên hàm export ở Controller (ví dụ: `getAllSpaces` thay vì `getAllSpace` hay `getAllResources`).
-   * Thay đổi endpoint gốc trong `server.js` từ `/resources` $\rightarrow$ `/spaces` và từ `/bookings` $\rightarrow$ `/reservations` cho đúng yêu cầu đề bài.
