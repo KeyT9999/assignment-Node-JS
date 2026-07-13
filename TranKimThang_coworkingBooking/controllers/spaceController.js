@@ -1,8 +1,5 @@
 const Space = require('../models/spaceModel');
 
-// @desc    Get all resources
-// @route   GET /spaces
-// @access  Public (or Protected, depending on requirement)
 const getAllSpaces = async (req, res) => {
   try {
     const resources = await Space.find();
@@ -13,9 +10,6 @@ const getAllSpaces = async (req, res) => {
   }
 };
 
-// @desc    Get single resource by ID
-// @route   GET /spaces/:id
-// @access  Public
 const getSpaceById = async (req, res) => {
   try {
     const resource = await Space.findById(req.params.id);
@@ -32,9 +26,6 @@ const getSpaceById = async (req, res) => {
   }
 };
 
-// @desc    Create a resource
-// @route   POST /spaces
-// @access  Private/Admin
 const createSpace = async (req, res) => {
   try {
     const { spaceCode, type, capacity, status, pricePerHour, amenities } = req.body;
@@ -43,7 +34,6 @@ const createSpace = async (req, res) => {
       return res.status(400).json({ message: 'spaceCode, type, and pricePerHour are required' });
     }
 
-    // Check for duplicate spaceCode
     const duplicate = await Space.findOne({ spaceCode });
     if (duplicate) {
       return res.status(400).json({ message: 'Space code already exists' });
@@ -65,9 +55,6 @@ const createSpace = async (req, res) => {
   }
 };
 
-// @desc    Update a resource
-// @route   PUT /spaces/:id
-// @access  Private/Admin
 const updateSpace = async (req, res) => {
   try {
     const { spaceCode, type, capacity, status, pricePerHour, amenities } = req.body;
@@ -77,7 +64,6 @@ const updateSpace = async (req, res) => {
       return res.status(404).json({ message: 'Space not found' });
     }
 
-    // If spaceCode is being updated, check for duplicates
     if (spaceCode && spaceCode !== resource.spaceCode) {
       const duplicate = await Space.findOne({ spaceCode });
       if (duplicate) {
@@ -85,7 +71,6 @@ const updateSpace = async (req, res) => {
       }
       resource.spaceCode = spaceCode;
     }
-
 
     if (type !== undefined) resource.type = type;
     if (capacity !== undefined) resource.capacity = capacity;
@@ -104,9 +89,6 @@ const updateSpace = async (req, res) => {
   }
 };
 
-// @desc    Delete a resource
-// @route   DELETE /spaces/:id
-// @access  Private/Admin
 const deleteSpace = async (req, res) => {
   try {
     const resource = await Space.findById(req.params.id);

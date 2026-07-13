@@ -4,14 +4,10 @@ const User = require('../models/userModel');
 const calculatePrice = require('../utils/calculatePrice');
 const checkOverlap = require('../utils/checkOverlap');
 
-// @desc    Get bookings
-// @route   GET /reservations
-// @access  Private
 const getReservations = async (req, res) => {
   try {
     let query = {};
 
-    // RBAC: Customers can only see their own bookings, Admins see all
     if (req.user.role === 'customer') {
       query.userId = req.user.id;
     }
@@ -27,14 +23,10 @@ const getReservations = async (req, res) => {
   }
 };
 
-// @desc    Create a booking
-// @route   POST /reservations (also aliased as POST /reservations/book)
-// @access  Private (Admin or Customer)
 const createReservation = async (req, res) => {
   try {
     const { spaceId, startTime, endTime, note } = req.body;
 
-    // Validate request body
     if (!spaceId || !startTime || !endTime) {
       return res.status(400).json({ message: 'spaceId, startTime, and endTime are required' });
     }
@@ -43,31 +35,25 @@ const createReservation = async (req, res) => {
     const end = new Date(endTime);
     const now = new Date();
 
-    // A. Time validation
-    // 1. Check if startTime is after or equal to current time
     if (start < now) {
       return res.status(400).json({ message: 'Start time cannot be in the past' });
     }
 
-    // 2. Check if startTime is before endTime
     if (start >= end) {
       return res.status(400).json({ message: 'Start time must be strictly before end time' });
     }
 
-    // B. Space availability check
     const resource = await Space.findById(spaceId);
     if (!resource) {
       return res.status(404).json({ message: 'Space not found' });
     }
 
-    // Reject if resource status is maintenance or offline
     if (resource.status === 'maintenance' || resource.status === 'offline') {
       return res.status(403).json({
         message: `This resource is currently unavailable due to status: ${resource.status}`
       });
     }
 
-    // C. Overlap conflict check
     const conflict = await checkOverlap({
 
       spaceId,
@@ -82,14 +68,12 @@ const createReservation = async (req, res) => {
       });
     }
 
-    // D. Dynamic price calculation
     const { hours, totalAmount, discountApplied } = calculatePrice({
       startTime: start,
       endTime: end,
       pricePerUnit: resource.pricePerHour
     });
 
-    // E. Wallet payment mode validation & processing
     const userId = req.user.id;
     let user = null;
 
@@ -105,12 +89,10 @@ const createReservation = async (req, res) => {
         });
       }
 
-      // Deduct balance and save user
       user.balance -= totalAmount;
       await user.save();
     }
 
-    // F. Create booking
     const newReservation = await Reservation.create({
       userId,
       spaceId,
@@ -119,10 +101,9 @@ const createReservation = async (req, res) => {
 
       totalAmount,
       note,
-      status: 'pending' // default status
+      status: 'pending'
     });
 
-    // Fetch and populate resource info for response
     const populatedReservation = await Reservation.findById(newReservation._id)
       .populate('userId', 'username role balance')
       .populate('spaceId');

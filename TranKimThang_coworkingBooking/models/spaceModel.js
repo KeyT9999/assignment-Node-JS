@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-
-
 const resourceSchema = new mongoose.Schema({
   spaceCode: {
     type: String,
@@ -9,7 +7,7 @@ const resourceSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
-  
+
   type: {
     type: String,
     required: [true, 'Type is required']
