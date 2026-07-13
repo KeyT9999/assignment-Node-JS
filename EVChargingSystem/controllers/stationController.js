@@ -1,13 +1,9 @@
 const Station = require("../models/stationModel");
 
-
-
-
 const createStation = async (req, res) => {
   try {
     const { stationCode, type, status, pricePerKwh, connectors } = req.body;
 
-    
     const station = await Station.create({
       stationCode,
       type,
@@ -28,12 +24,8 @@ const createStation = async (req, res) => {
   }
 };
 
-
-
-
 const getStations = async (req, res) => {
   try {
-    
     const stations = await Station.find();
 
     res.status(200).json({
@@ -49,14 +41,8 @@ const getStations = async (req, res) => {
   }
 };
 
-
-
-
 const getAvailableStations = async (req, res) => {
   try {
-    
-    
-    
     const stations = await Station.find({
       status: "available",
       isOccupied: false
@@ -75,15 +61,10 @@ const getAvailableStations = async (req, res) => {
   }
 };
 
-
-
-
 const getStationById = async (req, res) => {
   try {
-    
     const station = await Station.findById(req.params.id);
 
-    
     if (!station) {
       return res.status(404).json({
         message: "Station not found"
@@ -102,18 +83,14 @@ const getStationById = async (req, res) => {
   }
 };
 
-
-
-
 const updateStation = async (req, res) => {
   try {
-    
     const station = await Station.findByIdAndUpdate(
       req.params.id,
-      req.body, 
+      req.body,
       {
-        new: true,           
-        runValidators: true  
+        new: true,
+        runValidators: true
       }
     );
 
@@ -135,12 +112,8 @@ const updateStation = async (req, res) => {
   }
 };
 
-
-
-
 const deleteStation = async (req, res) => {
   try {
-    
     const station = await Station.findById(req.params.id);
 
     if (!station) {
@@ -149,14 +122,12 @@ const deleteStation = async (req, res) => {
       });
     }
 
-    
     if (station.isOccupied) {
       return res.status(400).json({
-        message: "Cannot delete occupied station" 
+        message: "Cannot delete occupied station"
       });
     }
 
-    
     await station.deleteOne();
 
     res.status(200).json({
@@ -178,4 +149,3 @@ module.exports = {
   updateStation,
   deleteStation
 };
-

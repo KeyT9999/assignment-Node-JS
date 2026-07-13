@@ -9,29 +9,30 @@ const seedTestData = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected for seeding...");
 
-    
     await Session.deleteMany({});
     await Station.deleteMany({});
     console.log("Cleared old sessions and stations.");
 
-    
     const admin = await User.findOne({ username: "admin1" });
     if (!admin) {
-      await User.create({ username: "admin1", password: "123", role: "admin", balance: 0 });
+      await User.create({ username: "admin1", password: "123", role: "admin", balance: 0, phoneNumber: "0987654321" });
       console.log("Created admin1 / 123");
+    } else {
+      admin.phoneNumber = "0987654321";
+      await admin.save();
     }
 
     let customer = await User.findOne({ username: "user1" });
     if (!customer) {
-      customer = await User.create({ username: "user1", password: "123", role: "customer", balance: 500 });
+      customer = await User.create({ username: "user1", password: "123", role: "customer", balance: 500, phoneNumber: "0912345678" });
       console.log("Created user1 / 123 with balance 500");
     } else {
       customer.balance = 500;
+      customer.phoneNumber = "0912345678";
       await customer.save();
-      console.log("Reset user1 balance to 500");
+      console.log("Reset user1 balance and phone number");
     }
 
-    
     const station1 = await Station.create({
       stationCode: "ST-FAST-001",
       type: "FastCharge",
@@ -54,9 +55,8 @@ const seedTestData = async () => {
 
     const now = new Date();
 
-    
-    const farFuture = new Date(now.getTime() + 3 * 60 * 60 * 1000); 
-    const farFutureEnd = new Date(farFuture.getTime() + 1 * 60 * 60 * 1000); 
+    const farFuture = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+    const farFutureEnd = new Date(farFuture.getTime() + 1 * 60 * 60 * 1000);
 
     const session1 = await Session.create({
       userId: customer._id,
@@ -69,8 +69,7 @@ const seedTestData = async () => {
     });
     console.log("Session 1 (100% refund test): _id =", session1._id, "| startTime =", farFuture.toISOString());
 
-    
-    const nearFuture = new Date(now.getTime() + 30 * 60 * 1000); 
+    const nearFuture = new Date(now.getTime() + 30 * 60 * 1000);
     const nearFutureEnd = new Date(nearFuture.getTime() + 1 * 60 * 60 * 1000);
 
     const session2 = await Session.create({
@@ -84,9 +83,8 @@ const seedTestData = async () => {
     });
     console.log("Session 2 (70% refund test): _id =", session2._id, "| startTime =", nearFuture.toISOString());
 
-    
-    const pastTime = new Date(now.getTime() - 5 * 60 * 60 * 1000); 
-    const pastEnd = new Date(pastTime.getTime() + 1 * 60 * 60 * 1000); 
+    const pastTime = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+    const pastEnd = new Date(pastTime.getTime() + 1 * 60 * 60 * 1000);
 
     const session3 = await Session.create({
       userId: customer._id,
@@ -99,7 +97,6 @@ const seedTestData = async () => {
     });
     console.log("Session 3 (cannot cancel - past): _id =", session3._id, "| startTime =", pastTime.toISOString());
 
-    
     const anotherFuture = new Date(now.getTime() + 5 * 60 * 60 * 1000);
     const anotherFutureEnd = new Date(anotherFuture.getTime() + 1 * 60 * 60 * 1000);
 
@@ -114,9 +111,8 @@ const seedTestData = async () => {
     });
     console.log("Session 4 (already cancelled - edge case): _id =", session4._id);
 
-    
-    const activeStart = new Date(now.getTime() - 30 * 60 * 1000); 
-    const activeEnd = new Date(now.getTime() + 1 * 60 * 60 * 1000); 
+    const activeStart = new Date(now.getTime() - 30 * 60 * 1000);
+    const activeEnd = new Date(now.getTime() + 1 * 60 * 60 * 1000);
     const session5 = await Session.create({
       userId: customer._id,
       stationId: station2._id,
@@ -128,9 +124,8 @@ const seedTestData = async () => {
     });
     console.log("Session 5 (ACTIVE - extension target): _id =", session5._id, "| endTime =", activeEnd.toISOString());
 
-    
-    const overlapStart = new Date(now.getTime() + 2 * 60 * 60 * 1000); 
-    const overlapEnd = new Date(overlapStart.getTime() + 1 * 60 * 60 * 1000); 
+    const overlapStart = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const overlapEnd = new Date(overlapStart.getTime() + 1 * 60 * 60 * 1000);
     const session6 = await Session.create({
       userId: customer._id,
       stationId: station2._id,
