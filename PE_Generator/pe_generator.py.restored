@@ -1,0 +1,1969 @@
+"""
+PE Code Generator v6 - SDN302 Practical Exam (CLI)
+===================================================
+Tool tự động generate code dự án PE từ template SUOCPE.
+Chạy offline hoàn toàn, không cần mạng, không cần GUI.
+
+Cách dùng:
+    1. Dán đề thi vào file debai.md (cùng thư mục)
+    2. Chạy: python pe_generator.py
+    3. Folder output sẽ được tạo tại thư mục cha (d:\\Assignment_NodeJS\\)
+
+Features:
+- 🔍 Tự động phân tích đề bài từ debai.md
+- 🧹 Tự động so sánh schemas, dọn dẹp trường thừa
+- 📮 Export Postman Collection JSON
+- 📁 Copy node_modules từ SUOCPE template
+- ⚡ Chạy 1 lệnh, ra 1 folder hoàn chỉnh
+"""
+
+import os
+import re
+import json
+import uuid
+import sys
+import shutil
+import subprocess
+from pathlib import Path
+from dynamic_exam_parser import parse_dynamic_spec
+from generic_generator import generate_generic_project
+from semantic_booking_generator import generate_semantic_booking_project
+
+# Fix Windows terminal encoding for emoji/unicode
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
+# ===== Thư mục & Cấu hình =====
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_TEMPLATE_DIR = os.path.join(os.path.dirname(SCRIPT_DIR), "SUOCPE")
+DEBAI_FILE = os.path.join(SCRIPT_DIR, "debai.md")
+OUTPUT_BASE_DIR = os.path.dirname(SCRIPT_DIR)  # d:\Assignment_NodeJS\
+OWNER_NAME = "TranKimThang"
+
+
+# ============================================================
+# OFFLINE SCHEMA COMPARATOR LOGIC
+# ============================================================
+
+def extract_fields_from_schema(model_content):
+    """Trích xuất danh sách tên trường (fields) từ file schema Mongoose."""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            extra_fields['booking'].append(field)
+            
+    return extra_fields
+
+
+# ============================================================
+# EXAM TEXT AUTO-PARSER
+# ============================================================
+
+class ExamParser:
+    """Phân tích đề thi PE từ text, tự động nhận diện các thành phần."""
+    
+    DOMAIN_PATTERNS = {
+        'event_management': {
+            'keywords': ['event management system', 'registrationmodel.js', 'listregistrations', 'getregistrationsbydate', 'register/unregister for events'],
+            'resource': ('Event', 'event'), 'booking': ('Registration', 'registration'),
+            'resource_code': 'name', 'price_field': 'capacity', 'features_field': 'date',
+            'resource_id': 'eventId', 'resource_route': '/events', 'booking_route': '/registrations',
+            'pricing_mode': 'EVENT_REGISTRATION',
+        },
+        'movie_theater_booking': {
+            'keywords': ['movie theaters management', 'movie theater', 'theatermodel.js', 'schedulemodel.js', 'numberoftickets'],
+            'resource': ('Theater', 'theater'), 'booking': ('Booking', 'booking'),
+            'resource_code': 'theaterName', 'price_field': 'ticketPrice', 'features_field': 'amenities',
+            'resource_id': 'scheduleId', 'resource_route': '/theaters', 'booking_route': '/bookings',
+            'pricing_mode': 'MOVIE_TICKETS',
+        },
+        'hospital_appointment': 
+            'resource_id': 'stationId',
+            'resource_route': '/stations',
+            'booking_route': '/sessions',
+            'pricing_mode': 'EV',
+        },
+        'hotel': {
+            'keywords': ['h
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        'ev_charging': {
+            'keywords': ['ev charging', 'charging station', 'electric vehicle', 'smart ev', 'charger'],
+            'resource': ('Station', 'station'),
+            'booking': ('Session', 'session'),
+            'resource_code': 'stationCode',
+            'price_field': 'pricePerKwh',
+            'features_field': 'connectors',
+            'resource_id': 'stationId',
+            'resource_route': '/stations',
+            'booking_route': '/sessions',
+            'pricing_mode': 'EV',
+        },
+        'hotel': {
+            'keywords': ['hotel', 'room booking', 'accommodation', 'check-in', 'check-out'],
+            'resource': ('Room', 'room'),
+            'booking': ('Booking', 'booking'),
+            'resource_code': 'roomCode',
+            'price_field': 'pricePerNight',
+            'features_field': 'facilities',
+            'resource_id': 'roomId',
+            'resource_route': '/rooms',
+            'booking_route': '/bookings',
+            'pricing_mode': 'NORMAL',
+        },
+        'parking': {
+            'keywords': ['parking', 'car park', 'parking lot', 'vehicle park'],
+            'resource': ('Slot', 'slot'),
+            'booking': ('Booking', 'booking'),
+            'resource_code': 'slotCode',
+            'price_field': 'pricePerHour',
+            'features_field': 'features',
+            'resource_id': 'slotId',
+            'resource_route': '/slots',
+            'booking
+            'features_field': 'amenities',
+            'resource_id': 'spaceId',
+            'resource_route': '/spaces',
+            'booking_route': '/reservations',
+            'pricing_mode': 'NORMAL',
+        },
+        'ev_charging': {
+            'keywords': ['ev charging', 'charging station', 'electric vehicle', 'smart ev', 'charger'],
+            'r
+            'booking': ('Session', 'session'),
+            'resource_code': 'stationCode',
+            'price_field': 'pricePerKwh',
+            'features_field': 'connectors',
+            'resource_id': 'stationId',
+            'resource_route': '/stations',
+            'booking_route': '/sessions',
+            'pricing_mode': 'EV',
+        },
+        'hotel': {
+            'keywords': ['hotel', 'room booking', 'accommodation', 'check-in', 'check-out'],
+            'resource': ('Room', 'room'),
+            'booking': ('Booking', 'booking'),
+            'resource_code': 'roomCode',
+            'price_field': 'pricePerNight',
+            'features_field': 'facilities',
+            'resource_id': 'roomId',
+            'resource_route': '/rooms',
+            'booking_route': '/bookings',
+            'pricing_mode': 'NORMAL',
+        },
+        'parking': {
+            'keywords': ['parking', 'car park', 'parking lot', 'vehicle park'],
+            'resource': ('Slot', 'slot'),
+            'booking': ('Booking', 'booking'),
+            'resource_code': 'slotCode',
+            'price_field': 'pricePerHour',
+            'features_field': 'features',
+            'resource_id': 'slotId',
+            'resource_route': '/slots',
+            'booking_route': '/bookings',
+            'pricing_mode': 'NORMAL',
+        },
+    }
+    
+    @classmethod
+    def parse(cls, text):
+            if any(kw in ml for kw in ['space', 'station', 'room', 'slot', 'court', 'equipment', 'car']):
+                result['detected']['resource_upper'] = m[0].upper() + m[1:]
+                result['detected']['resource_lower'] = m[0].lower() + m[1:]
+            elif any(kw in ml for kw in ['reservation', 'session', 'booking', 'lending', 'rental']):
+                result['detected']['booking_upper'] = m[0].upper() + m[1:]
+                result['detected']['booking_lower'] = m[0].lower() + m[1:]
+        
+        field_patterns = {
+            'resource_code': [r'(\w+Code)\s*\(?String', r'(\w+Code)\s*:'],
+            'price_field': [r'(pricePerHour|pricePerKwh|pricePerNight|pricePerDay)\s*[:\(]'],
+            'features_field': [r'(amenities|connectors|facilities|equipment|tags)\s*[:\(]'],
+            'resource_id': [r'(spaceId|stationId|roomId|slotId|courtId|bookId|equipmentId|carNumber)\s*[:\(]'],
+# ============================================================
+# POSTMAN COLLECTION GENERATOR
+# ============================================================
+
+def generate_postman_collection(config):
+    ru = config["resource_name_upper"]
+    rl = config["resource_name_lower"]
+    bu = config["booking_name_upper"]
+    bl = config["booking_name_lower"]
+    base_url = "http://localhost:9999"
+    admin_pw = config.get("admin_password", "123456")
+    customer_pw = config.get("customer_password", "123456")
+    res_route = config["resource_route_path"]
+    book_route = config["booking_route_path"]
+    res_id_field = config["resource_id_field"]
+    
+    collection = {
+        "info": {
+            "_postman_id": str(uuid.uuid4()),
+                'pricing_mode': pattern['pricing_mode'],
+            }
+        
+        model_pattern = r'(?:create|file[:\s]*)\s*(\w+)Model\.js'
+        models = re.findall(model_pattern, text, re.IGNORECASE)
+        for m in models:
+            {"key": "token", "value": ""},
+            {"key": f"{rl}_id", "value": ""}
+        ],
+        "item": [
+            {
+                "name": "Auth",
+                "item": [
+                    {
+                        "name": "Register Customer",
+                        "request": {
+                            "method": "POST",
+                            "header": [{"key": "Content-Type", "value": "application/json"}],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps({"username": "testuser", "password": customer_pw, "role": "customer"}, indent=2)
+                            },
+                            "url": {"raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"]}
+                        }
+                    },
+                    {
+                        "name": "Register Admin",
+                        "request": {
+                            "method": "POST",
+                            "header": [{"key": "Content-Type", "value": "application/json"}],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps({"username": "admin1", "password": admin_pw, "role": "admin"}, indent=2)
+                            },
+                            "url": {"raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"]}
+                        }
+                    },
+                    {
+                        "name": "Login Admin",
+                        "event": [
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        "request": {
+                            "method": "GET",
+                            "url": {"raw": f"{{{{base_url}}}}{res_route}", "host": ["{{base_url}}"], "path": res_route.strip('/').split('/')}
+                        }
+                    },
+                    {
+                        "name": f"Get {ru} By ID",
+                        "request": {
+                            "method": "GET",
+                            "url": {"raw": f"{{{{base_url}}}}{res_route}/{{{{{rl}_id}}}}", "host": ["{{base_url}}"], "path": res_route.strip('/').split('/') + [f"{{{{{rl}_id}}}}"]}
+                        }
+                    },
+                    {
+                        "name": f"Create {ru} (Admin)",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+                                {"key": "Content-Type", "value": "application/json"},
+                                {"key": "Authorization", "value": "Bearer {{token}}"}
+                            ],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps({
+                                    config["resource_code_field"]: "TEST-001",
+                                    "type": "meetingRoom",
+                                    "capacity": 8,
+                                    "status": "available",
+                                    config["price_field"]: 150000,
+                                    config["features_field"]: ["projector", "whiteboard"]
+                                }, indent=2)
+                            },
+                            "url": {"raw": f"{{{{base_url}}}}{res_route}", "host": ["{{base_url}}"], "path": res_route.strip('/').split('/')}
+                        }
+                    }
+                ]
+            },
+            {
+                "name": f"{bu} Management",
+                "item": [
+                    {
+                        "name": f"Get {bu}s",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                            "url": {"raw": f"{{{{base_url}}}}{book_route}", "host": ["{{base_url}}"], "path": book_route.strip('/').split('/')}
+                        }
+                    },
+                    {
+                        "name": f"Create {bu}",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+    pattern = rf'^[ \t]*\b{re.escape(field_name)}\b\s*:[^\n]*,?\n'
+    content = re.sub(pattern, '', content, flags=re.MULTILINE)
+    return content
+
+
+
+def clean_auth_controller_no_wallet(content):
+    pattern = r'\n    // Set default balance\n.*?userBalance = 0;\n      \}\n    \}\n'
+    content = re.sub(pattern, '\n', content, flags=re.DOTALL)
+    content = content.replace('      balance: userBalance\n', '')
+    content = content.replace('      role: userRole,\n    });', '      role: userRole\n    });')
+    content = content.replace('      balance: user.balance,\n', '')
+    content = content.replace(', balance', '')
+    return content
+
+
+def clean_booking_controller_no_wallet(content):
+    pattern = r"    // E\. Wallet payment mode validation.*?(?=\s*// F\. Create)"
+    content = re.sub(pattern, '\n    const userId = req.user.id;\n\n', content, flags=re.DOTALL)
+    content = content.replace('    let user = null;\n\n', '')
+    content = content.replace('    let user = null;\n', '')
+    return content
+
+
+def clean_booking_controller_no_status(content):
+    content = content.replace("      status: 'pending' // default status\n", '')
+    return content
+
+
+def clean_calculate_price_normal_only(content):
+    pattern = (
+        r"  // 1\. Check pricing mode \(EV vs Normal\)\n"
+        r"  // EV charging session formula:.*?\n"
+        r"  if \(process\.env\.PRICING_MODE === 'EV'\) \{\n"
+        r"    totalAmount = hours \* 15 \* \w+;\n"
+        r"  \} else \{\n"
+        r"    // Normal .*? formula: .*?\n"
+        r"    totalAmount = hours \* (\w+);\n"
+        r"  \}"
+    )
+    match = re.search(pattern, content)
+    if match:
+        price_var = match.group(1)
+        replacement = f"  // Calculate: Total = Hours × {price_var}\n  totalAmount = hours * {price_var};"
+        content = re.sub(pattern, replacement, content)
+    return content
+
+
+def clean_calculate_price_ev_only(content):
+    content = content.replace(', balance', '')
+    return content
+
+
+def clean_booking_controller_no_wallet(content):
+    pattern = r"    // E\. Wallet payment mode validation.*?(?=\s*// F\. Create)"
+    content = re.sub(pattern, '\n    const userId = req.user.id;\n\n', content, flags=re.DOTALL)
+    content = content.replace('    let user = null;\n\n', '')
+    content = content.replace('    let user = null;\n', '')
+    return content
+
+
+def clean_booking_controller_no_status(content):
+    content = content.replace("      status: 'pending' // default status\n", '')
+    return content
+
+
+def clean_calculate_price_normal_only(content):
+    pattern = (
+        r"  // 1\. Check pricing mode \(EV vs Normal\)\n"
+        r"  // EV charging session formula:.*?\n"
+        r"  if \(process\.env\.PRICING_MODE === 'EV'\) \{\n"
+        r"    totalAmount = hours \* 15 \* \w+;\n"
+        r"  \} else \{\n"
+        r"    // Normal .*? formula: .*?\n"
+        r"    totalAmount = hours \* (\w+);\n"
+        r"  \}"
+    )
+    match = re.search(pattern, content)
+    if match:
+    return content
+
+
+def clean_booking_controller_no_status(content):
+    content = content.replace("      status: 'pending' // default status\n", '')
+    return content
+
+
+def clean_calculate_price_normal_only(content):
+    pattern = (
+        r"  // 1\. Check pricing mode \(EV vs Normal\)\n"
+        r"  // EV charging session formula:.*?\n"
+        r"  if \(process\.env\.PRICING_MODE === 'EV'\) \{\n"
+        r"    totalAmount = hours \* 15 \* \w+;\n"
+        r"  \} else \{\n"
+
+def clean_booking_controller_no_status(content):
+    content = content.replace("      status: 'pending' // default status\n", '')
+    return content
+
+
+def clean_calculate_price_normal_only(content):
+    pattern = (
+        r"  // 1\. Check pricing mode \(EV vs Normal\)\n"
+        r"  // EV charging session formula:.*?\n"
+        r"  if \(process\.env\.PRICING_MODE === 'EV'\) \{\n"
+        r"    totalAmount = hours \* 15 \* \w+;\n"
+        r"  \} else \{\n"
+        r"    // Normal .*? formula: .*?\n"
+        r"    totalAmount = hours \* (\w+);\n"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    output_dir = config["output_dir"]
+    output_path = os.path.join(output_dir, project_name)
+    
+    ru = config["resource_name_upper"]
+    rl = config["resource_name_lower"]
+    bu = config["booking_name_upper"]
+    bl = config["booking_name_lower"]
+    
+    # Custom remove lists
+    user_remove_fields = [f.strip() for f in config.get("user_fields_to_remove", "").split(",") if f.strip()]
+    resource_remove_fields = [f.strip() for f in config.get("resource_fields_to_remove", "").split(",") if f.strip()]
+    booking_remove_fields = [f.strip() for f in config.get("booking_fields_to_remove", "").split(",") if f.strip()]
+    
+    is_normal = config["pricing_mode"] == "NORMAL"
+    no_wallet = config.get("remove_wallet_logic", "true") == "true"
+    no_happy_hour = config.get("remove_happy_hour_logic", "true") == "true"
+    
+    qty_field = config.get("quantity_field", "quantityEstimate")
+    if not qty_field or qty_field in booking_remove_fields:
+        qty_field = "quantityEstimate"
+        if "quantityEstimate" not in booking_remove_fields:
+            booking_remove_fields.append("quantityEstimate")
+            
+    replacements = [
+        ("resourceController", f"{rl}Controller"), ("bookingController", f"{bl}Controller"),
+        ("resourceModel", f"{rl}Model"), ("bookingModel", f"{bl}Model"),
+        ("resourceRoutes", f"{rl}Routes"), ("bookingRoutes", f"{bl}Routes"),
+        ("resourceCode", config["resource_code_field"]),
+        ("pricePerUnit", config["price_field"]),
+        ("features", config["features_field"]),
+        ("resourceId", config["resource_id_field"]),
+        ("quantityEstimate", qty_field),
+    ]
+    if config["total_field"] != "totalAmount":
+    if config["total_field"] != "totalAmount":
+        replacements.append(("totalAmount", config["total_field"]))
+    replacements.extend([("Resource", ru), ("Booking", bu)])
+    replacements.extend([("resource", rl), ("booking", bl)])
+    replacements.extend([("/resources", config["resource_route_path"]), ("/bookings", config["booking_route_path"])])
+    replacements.extend([
+        ("getAllResources", f"getAll{ru}s"), ("getResourceById", f"get{ru}ById"),
+        ("createResource", f"create{ru}"), ("updateResource", f"update{ru}"),
+        ("deleteResource", f"delete{ru}"), ("getBookings", f"get{bu}s"),
+        ("createBooking", f"create{bu}"),
+    ])
+    replacements.append(("sdn302_pe_template", config["db_name"]))
+    replacements.extend([
+        ('"sdn302_pe_template"', f'"{config["db_name"]}"'),
+        ("SDN302 Practical Exam Generic Template", f'SDN302 PE - {project_name}'),
+    ])
+    env_replacements = [
+        ("PRICING_MODE=NORMAL", f'PRICING_MODE={config["pricing_mode"]}'),
+        ("ENABLE_HAPPY_HOUR=false", f'ENABLE_HAPPY_HOUR={config["enable_happy_hour"]}'),
+        ("ENABLE_WALLET=false", f'ENABLE_WALLET={config["enable_wallet"]}'),
+    ]
+    file_renames = {
+        "models/resourceModel.js": f"models/{rl}Model.js",
+        "models/bookingModel.js": f"models/{bl}Model.js",
+        "controllers/resourceController.js": f"controllers/{rl}Controller.js",
+        "controllers/bookingController.js": f"controllers/{bl}Contro
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+"""
+
+
+# ==================== GUI APPLICATION v5 ====================
+
+class PEGeneratorApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("🚀 PE Code Generator v5 - SDN302")
+        self.root.geometry("1050x900")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        row = tk.Frame(parent, bg=self.bg)
+        row.pack(fill="x", pady=3)
+        tk.Label(row, text=label, bg=self.bg, fg=self.fg,
+                font=("Segoe UI", 10), width=25, anchor="e").pack(side="left")
+        entry = tk.Entry(row, bg=self.entry_bg, fg=self.fg,
+                        font=("Consolas", 10), insertbackground=self.fg, width=35,
+                        highlightbackground=self.border, highlightthickness=1, relief="flat")
+        entry.insert(0, default)
+        entry.pack(side="left", padx=5, fill="x", expand=True)
+        if tooltip:
+            tk.Label(row, text=tooltip, bg=self.bg, fg="#484f58",
+                    font=("Segoe UI", 8)).pack(side="left", padx=3)
+        return entry
+    
+    def _checkbox(self, parent, text, var):
+        cb = tk.Checkbutton(parent, text=text, variable=var,
+                           bg=self.bg, fg=self.fg, selectcolor=self.entry_bg,
+                           font=("Segoe UI", 10), activebackground=self.bg,
+                           activeforeground=self.fg, cursor="hand2")
+        cb.pack(anchor="w", padx=18)
+        return cb
+    
+    # ==================== TABS CREATION ====================
+    
+    def create_exam_parser_tab(self):
+        tab = tk.Frame(self.notebook, bg=self.bg)
+        self.notebook.add(tab, text="  📝 Dán đề bài  ")
+        
+        tk.Label(tab, text="Dán nội dung đề thi vào đây, bấm 🔍 Phân tích đề bài → Tự động so khớp schemas để dọn dẹp offline!",
+                bg=self.bg, fg=self.yellow, font=("Segoe UI", 10, "italic")).pack(pady=(10, 5))
+        
+        self.exam_text = scrolledtext.ScrolledText(tab, bg=self.entry_bg, fg=self.fg,
+                                                    font=("Consolas", 10), height=20,
+                                                    insertbackground=self.fg,
+                                                    highlightbackground=self.border,
+                                                    highlightthickness=1, relief="flat")
+        self.exam_text.pack(fill="both", expand=True, padx=15, pady=5)
+        
+        btn_row = tk.Frame(tab, bg=self.bg)
+        btn_row.pack(fill="x", padx=15, pady=5)
+        
+        tk.Button(btn_row, text="🔍 Phân tích đề bài & Tự động so sánh schemas", command=self.parse_exam,
+                 bg=self.accent, fg="white", font=("Segoe UI", 11, "bold"),
+                 relief="flat", cursor="hand2", padx=20, pady=6).pack(side="left")
+        
+        self.parse_result_label = tk.Label(btn_row, text="", bg=self.bg, fg=self.green,
+                                          font=("Segoe UI", 10))
+        self.parse_result_label.pack(side="left", padx=15)
+        
+    def create_config_tab(self):
+        tab = tk.Frame(self.notebook, bg=self.bg)
+        self.notebook.add(tab, text="  ⚙️ Cấu hình  ")
+        frame = self._make_scroll_frame(tab)
+        
+        # Project info
+        s = self._section(frame, "📁 Project")
+        self.project_name = self._entry(s, "Tê
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    # 9. Tổng kết
+    print()
+    print("=" * 60)
+    print(f"🎉 THÀNH CÔNG! Project đã được tạo hoàn chỉnh!")
+    print("=" * 60)
+    print()
+    print(f"📂 Thư mục: {output_path}")
+    print()
+    print("📌 Các bước tiếp theo:")
+    print(f"   1. cd {config['project_name']}")
+    print(f"   2. npm run seed")
+    print(f"   3. npm run dev")
+    print()
+    print(f"🧪 Test Postman: Import file {config['project_name']}.postman_collection.json")
+    print(f"   Login admin1/{config['admin_password']} → token tự động lưu")
+    print()
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+        self.root.geometry("1050x900")
+        self.root.configure(bg="#0d1117")
+        self.root.resizable(True, True)
+        
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
+        
+        # GitHub Dark theme
+        self.bg = "#0d1117"
+        self.fg = "#c9d1d9"
+        self.accent = "#1f6feb"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        try:
+            result = generate_project(config, dry_run=False)
+            if result[0] is None:
+                self.log(f"❌ {result[1]}")
+                messagebox.showerror("Lỗi", result[1])
+                return
+            files_dict, output_path, cleanup_log = result
+            
+            self.log("📄 Các file đã tạo thành công:")
+            for f in sorted(files_dict.keys()):
+                self.log(f"   ✅ {f}")
+                
+            if cleanup_log:
+                self.log("\n🧹 Nhật ký dọn dẹp code thừa:")
+                for msg in sorted(set(cleanup_log)):
+                    self.log(f"   {msg}")
+                    
+            self.log(f"\n🎉 Thành công! Project: {config['project_name']}")
+            self.log(f"📂 Thư mục: {output_path}")
+            self.notebook.select(4)
+            
+            messagebox.showinfo("Thành công!", 
+                f"Đã generate project + Postman collection!\n\n"
+                f"Thư mục: {output_path}\n\n"
+                f"Các bước tiếp theo:\n1. cd {config['project_name']}\n2. npm install\n3. npm run seed\n4. npm run dev")
+                
+            if os.name == 'nt':
+                os.startfile(output_path)
+        except Exception as e:
+            self.log(f"❌ Lỗi: {str(e)}")
+            import traceback
+            self.log(traceback.format_exc())
+            messagebox.showerror("Lỗi", str(e))
+
+
+def main():
+    root = tk.Tk()
+    app = PEGeneratorApp(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def main():
+    root = tk.Tk()
+    app = PEGeneratorApp(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

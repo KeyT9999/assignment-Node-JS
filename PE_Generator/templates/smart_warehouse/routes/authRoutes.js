@@ -1,0 +1,1 @@
+const r=require('express').Router(),c=require('../controllers/authController'),{verifyToken,requireRole}=require('../middleware/authMiddleware');r.post('/login',c.login);r.post('/register',verifyToken,requireRole('warehouse_manager'),c.register);module.exports=r;

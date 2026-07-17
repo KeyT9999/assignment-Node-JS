@@ -1,0 +1,57 @@
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+exports.register = async (req, res) => {
+  try {
+    if (req.body.role === 'warehouse_manager')return res.status(400).json({
+      message: 'Cannot register another manager via API'
+    });
+    if (await User.exists({
+      username: req.body.username
+    }))return res.status(409).json({
+      message: 'Username already exists'
+    });
+    const user = await User.create({
+      username: req.body.username,
+      password: req.body.password,
+      fullName: req.body.fullName,
+      role: req.body.role || 'stock_keeper',
+      assignedWarehouse: req.body.assignedWarehouse || null
+    });
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      fullName: user.fullName,
+      role: user.role,
+      assignedWarehouse: user.assignedWarehouse
+    })
+  } catch (e) {
+    res.status(400).json({
+      message: e.message
+    })
+  }
+};
+exports.login = async (req, res) => {
+  const user = await User.findOne({
+    username: req.body.username
+  });
+  if (!user || !await user.comparePassword(req.body.password || ''))return res.status(401).json({
+    message: 'Invalid credentials'
+  });
+  if (!user.isActive)return res.status(403).json({
+    message: 'Account is deactivated. Contact your manager.'
+  });
+  const payload = {
+    userId: user._id,
+    role: user.role,
+    fullName: user.fullName,
+    assignedWarehouse: user.assignedWarehouse
+  };
+  res.json({
+    token: jwt.sign(payload,
+    process.env.JWT_SECRET || 'replace_with_a_long_random_secret',
+    {
+      expiresIn: '1d'
+    }),
+    user: payload
+  })
+};

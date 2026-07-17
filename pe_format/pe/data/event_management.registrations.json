@@ -1,0 +1,30 @@
+[{
+  "_id": {
+    "$oid": "67c917420357ade5694b4048"
+  },
+  "studentId": "67c917160357ade5694b4040",
+  "eventId": "67c917290357ade5694b4043",
+  "registrationDate": {
+    "$date": "2025-03-22T00:00:00.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67cac1e6be3634844b9f55b1"
+  },
+  "studentId": "67cc501ebe3634844b9f55cb",
+  "eventId": "67cc4eaabe3634844b9f55bc",
+  "registrationDate": {
+    "$date": "2025-04-22T00:00:00.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "67cc54b8be3634844b9f55d1"
+  },
+  "studentId": "67cc501ebe3634844b9f55cb",
+  "eventId": "67c917290357ade5694b4043",
+  "registrationDate": {
+    "$date": "2025-03-08T00:00:00.000Z"
+  }
+}]

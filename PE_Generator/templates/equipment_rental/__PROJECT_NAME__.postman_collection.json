@@ -1,0 +1,13 @@
+{
+  "info": {"name": "__PROJECT_NAME__", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+  "variable": [{"key":"base_url","value":"http://localhost:9999"},{"key":"token","value":""},{"key":"admin_token","value":""},{"key":"equipment_id","value":""},{"key":"rental_id","value":""}],
+  "item": [
+    {"name":"Login","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"username\":\"user1\",\"password\":\"__CUSTOMER_PASSWORD__\"}"},"url":"{{base_url}}/auth/login"},"event":[{"listen":"test","script":{"exec":["pm.collectionVariables.set('token', pm.response.json().token);"]}}]},
+    {"name":"Login Admin","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"username\":\"admin1\",\"password\":\"__ADMIN_PASSWORD__\"}"},"url":"{{base_url}}/auth/login"},"event":[{"listen":"test","script":{"exec":["pm.collectionVariables.set('admin_token', pm.response.json().token);"]}}]},
+    {"name":"List Equipment","request":{"method":"GET","url":"{{base_url}}/equipment"}},
+    {"name":"Create Rental","request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"equipmentId\":\"{{equipment_id}}\",\"startDate\":\"2026-08-01\",\"endDate\":\"2026-08-03\",\"quantity\":2}"},"url":"{{base_url}}/rentals"}},
+    {"name":"Get Rentals","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":"{{base_url}}/rentals"}},
+    {"name":"Return Equipment","request":{"method":"PATCH","header":[{"key":"Authorization","value":"Bearer {{admin_token}}"}],"url":"{{base_url}}/rentals/{{rental_id}}/return"}},
+    {"name":"Search Rentals By Date","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":"{{base_url}}/rentalsByDate?start=2026-01-01&end=2026-12-31"}}
+  ]
+}

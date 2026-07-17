@@ -1,0 +1,582 @@
+{
+  "models": [
+    {
+      "name": "user",
+      "className": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "billing_manager",
+            "meter_reader",
+            "auditor"
+          ],
+          "ref": null,
+          "default": "meter_reader"
+        },
+        {
+          "name": "assignedZone",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "null"
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true"
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    },
+    {
+      "name": "customerAccount",
+      "className": "CustomerAccount",
+      "fields": [
+        {
+          "name": "accountCode",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "customerName",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "address",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "serviceZone",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "active",
+            "suspended",
+            "closed"
+          ],
+          "ref": null,
+          "default": "active"
+        },
+        {
+          "name": "outstandingBalance",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "0"
+        }
+      ]
+    },
+    {
+      "name": "meter",
+      "className": "Meter",
+      "fields": [
+        {
+          "name": "meterCode",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "accountId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": "CustomerAccount",
+          "default": null
+        },
+        {
+          "name": "serviceZone",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "currentReading",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "0"
+        },
+        {
+          "name": "lastReadingAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "null"
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "active",
+            "maintenance",
+            "disconnected"
+          ],
+          "ref": null,
+          "default": "active"
+        }
+      ]
+    },
+    {
+      "name": "tariffPlan",
+      "className": "TariffPlan",
+      "fields": [
+        {
+          "name": "tariffCode",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "effectiveFrom",
+          "type": "Date",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "effectiveTo",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "null"
+        },
+        {
+          "name": "tiers",
+          "type": "[String]",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "taxRate",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "meterReading",
+      "className": "MeterReading",
+      "fields": [
+        {
+          "name": "readingCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "meterId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Meter",
+          "default": null
+        },
+        {
+          "name": "previousReading",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "currentReading",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "consumptionKwh",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "billingMonth",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "recordedBy",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "User",
+          "default": null
+        },
+        {
+          "name": "recordedAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    },
+    {
+      "name": "invoice",
+      "className": "Invoice",
+      "fields": [
+        {
+          "name": "invoiceCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "accountId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "CustomerAccount",
+          "default": null
+        },
+        {
+          "name": "meterReadingId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": "MeterReading",
+          "default": null
+        },
+        {
+          "name": "tariffId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "TariffPlan",
+          "default": null
+        },
+        {
+          "name": "subtotal",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "taxAmount",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalAmount",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "paidAmount",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "0"
+        },
+        {
+          "name": "dueDate",
+          "type": "Date",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "unpaid",
+            "partially_paid",
+            "paid",
+            "overdue"
+          ],
+          "ref": null,
+          "default": "unpaid"
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    },
+    {
+      "name": "paymentTransaction",
+      "className": "PaymentTransaction",
+      "fields": [
+        {
+          "name": "paymentCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "invoiceId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Invoice",
+          "default": null
+        },
+        {
+          "name": "amount",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "method",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [
+            "cash",
+            "bank_transfer",
+            "e_wallet"
+          ],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "receivedBy",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "User",
+          "default": null
+        },
+        {
+          "name": "paidAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "method": "POST",
+      "path": "/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login"
+    },
+    {
+      "method": "POST",
+      "path": "/tariffs"
+    },
+    {
+      "method": "POST",
+      "path": "/customers"
+    },
+    {
+      "method": "GET",
+      "path": "/customers"
+    },
+    {
+      "method": "POST",
+      "path": "/readings"
+    },
+    {
+      "method": "POST",
+      "path": "/invoices/generate"
+    },
+    {
+      "method": "POST",
+      "path": "/invoices/:id/payments"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/consumption-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/collection-summary"
+    }
+  ],
+  "roles": [
+    "billing_manager",
+    "meter_reader",
+    "auditor"
+  ],
+  "authRequired": true,
+  "signals": {
+    "overlap": true,
+    "inventory": false,
+    "payment": true,
+    "views": false,
+    "atomic": true,
+    "date_range": false
+  }
+}

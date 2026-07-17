@@ -374,10 +374,98 @@ const getOverdueSessions = async (req, res) => {
   }
 };
 
+const cancelSessionsInTimeRange = async (req, res) => {
+  try {
+    const { startTime, endTime, reason } = req.body;
+
+    if (!startTime || !endTime) {
+      return res.status(400).json({
+        message: "startTime and endTime are required"
+      });
+    }
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        message: "Invalid date format"
+      });
+    }
+
+    if (start.getTime() >= end.getTime()) {
+      return res.status(400).json({
+        message: "startTime must be strictly before endTime"
+      });
+    }
+
+    const cancelReasonStr = reason || "System Maintenance";
+
+    
+    const overlappingSessions = await Session.find({
+      status: { $in: ["pending", "active"] },
+      startTime: { $lt: end },
+      endTime: { $gt: start }
+    });
+
+    if (overlappingSessions.length === 0) {
+      return res.status(200).json({
+        message: "No sessions found in the specified time slot to cancel.",
+        cancelledCount: 0,
+        sessions: []
+      });
+    }
+
+    const cancelledSessions = [];
+
+    
+    for (const session of overlappingSessions) {
+      
+      const user = await User.findById(session.userId);
+      if (user) {
+        user.balance = Number((user.balance + session.totalCost).toFixed(2));
+        await user.save();
+      }
+
+      
+      session.status = "cancelled";
+      session.cancelReason = cancelReasonStr;
+      session.cancelledAt = new Date();
+      await session.save();
+
+      cancelledSessions.push({
+        _id: session._id,
+        userId: session.userId,
+        stationId: session.stationId,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        totalCost: session.totalCost,
+        status: session.status,
+        cancelReason: session.cancelReason,
+        cancelledAt: session.cancelledAt,
+        refundedAmount: session.totalCost
+      });
+    }
+
+    return res.status(200).json({
+      message: `Successfully cancelled all ${cancelledSessions.length} session(s) in the specified time slot.`,
+      cancelledCount: cancelledSessions.length,
+      sessions: cancelledSessions
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Cancelling sessions in range failed",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSessions,
   bookSession,
   cancelSession,
   extendSession,
-  getOverdueSessions
+  getOverdueSessions,
+  cancelSessionsInTimeRange
 };

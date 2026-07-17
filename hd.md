@@ -1,4 +1,5 @@
 # HƯỚNG DẪN ÔN TẬP PE NODE.JS & THỰC HÀNH THÊM API HUỶ SẠC (CANCEL)
+python pe_generator.py
 
 Tài liệu này tổng hợp phân tích điểm chung của các dự án PE (Practical Exam), bài học kinh nghiệm, quy trình thêm API mới và hướng dẫn chi tiết cách viết & test API Huỷ sạc pin (`cancel`) theo đúng yêu cầu thực tế.
 

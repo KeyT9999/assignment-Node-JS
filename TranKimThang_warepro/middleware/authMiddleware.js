@@ -1,0 +1,22 @@
+const jwt = require('jsonwebtoken');
+const verifyToken = (req, res, next) => {
+  const h = req.headers.authorization;
+  if (!h?.startsWith('Bearer '))return res.status(401).json({
+    message: 'Authentication required'
+  });
+  try {
+    req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET || 'replace_with_a_long_random_secret');
+    next()
+  } catch (e) {
+    res.status(401).json({
+      message: 'Invalid or expired token'
+    })
+  }
+};
+const requireRole = (...roles) => (req, res, next) => roles.includes(req.user.role)?next():res.status(403).json({
+  message: 'Forbidden'
+});
+module.exports = {
+  verifyToken,
+  requireRole
+};

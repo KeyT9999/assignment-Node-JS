@@ -1,0 +1,229 @@
+{
+  "models": [
+    {
+      "name": "user",
+      "className": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "admin",
+            "customer"
+          ],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "room",
+      "className": "Room",
+      "fields": [
+        {
+          "name": "roomCode",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "roomType",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "standard",
+            "deluxe",
+            "suite"
+          ],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "capacity",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "available",
+            "maintenance"
+          ],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "pricePerNight",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "amenities",
+          "type": "[String]",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "reservation",
+      "className": "Reservation",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "User",
+          "default": null
+        },
+        {
+          "name": "roomId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Room",
+          "default": null
+        },
+        {
+          "name": "checkInDate",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "checkOutDate",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "numberOfGuests",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalAmount",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [
+            "confirmed",
+            "cancelled",
+            "completed"
+          ],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "note",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "method": "POST",
+      "path": "/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login"
+    },
+    {
+      "method": "GET",
+      "path": "/reservations"
+    },
+    {
+      "method": "POST",
+      "path": "/reservations"
+    }
+  ],
+  "roles": [
+    "admin",
+    "customer"
+  ],
+  "authRequired": true,
+  "signals": {
+    "overlap": true,
+    "inventory": false,
+    "payment": true,
+    "views": false,
+    "atomic": false,
+    "date_range": false
+  }
+}

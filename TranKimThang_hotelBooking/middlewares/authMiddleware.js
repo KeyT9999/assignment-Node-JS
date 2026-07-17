@@ -1,0 +1,1 @@
+const jwt=require('jsonwebtoken');exports.protect=(q,s,n)=>{const h=q.headers.authorization;if(!h?.startsWith('Bearer '))return s.status(401).json({message:'Authentication required'});try{q.user=jwt.verify(h.split(' ')[1],process.env.JWT_SECRET);n()}catch(e){s.status(401).json({message:'Invalid token'})}};

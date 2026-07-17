@@ -1,0 +1,245 @@
+const mongoose = require('mongoose');
+const Product = require('../models/productModel');
+const Warehouse = require('../models/warehouseModel');
+const Ledger = require('../models/stockLedgerModel');
+const Transaction = require('../models/stockTransactionModel');
+const positive = (n) => Number(n)>0;
+const activeProduct = async (id, session) => {
+  const p = await Product.findById(id).session(session);
+  if (!p)throw Object.assign(new Error('Product not found'), {
+    status: 404
+  });
+  if (!p.isActive)throw Object.assign(new Error('Product is not active'), {
+    status: 400
+  });
+  return p
+};
+const warehouse = async (id, session) => {
+  const w = await Warehouse.findById(id).session(session);
+  if (!w)throw Object.assign(new Error('Warehouse not found'), {
+    status: 404
+  });
+  if (w.status !== 'active')throw Object.assign(new Error('Warehouse is not active'), {
+    status: 400
+  });
+  return w
+};
+const fail = (res, e) => res.status(e.status || 500).json({
+  message: e.message
+});
+exports.importStock = async (req, res) => {
+  const {
+    productId,
+    warehouseId,
+    quantity,
+    unitPrice,
+    note
+  }
+ = req.body;
+  if (!positive(quantity) || !positive(unitPrice))return res.status(400).json({
+    message: 'quantity and unitPrice must be greater than 0'
+  });
+  try {
+    await activeProduct(productId);
+    const w = await warehouse(warehouseId);
+    const qty = Number(quantity);
+    if (w.currentLoad+qty>w.maxCapacity)throw Object.assign(new Error(`Insufficient warehouse capacity. Available: ${w.maxCapacity-w.currentLoad} units`), {
+      status: 409
+    });
+    await Ledger.findOneAndUpdate({
+      productId,
+      warehouseId
+    }, {
+      $inc: {
+        quantity: qty
+      },
+      $set: {
+        lastUpdated: new Date()
+      }
+    }, {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true
+    });
+    w.currentLoad += qty;
+    if (w.currentLoad >= w.maxCapacity)w.status = 'full';
+    await w.save();
+    const transaction = await Transaction.create({
+      type: 'import',
+      productId,
+      warehouseId,
+      quantity: qty,
+      unitPrice: Number(unitPrice),
+      totalValue: qty*Number(unitPrice),
+      performedBy: req.user.userId,
+      note
+    });
+    res.status(201).json(transaction)
+  } catch (e) {
+    fail(res, e)
+  }
+};
+exports.exportStock = async (req, res) => {
+  const {
+    productId,
+    warehouseId,
+    quantity,
+    unitPrice,
+    note
+  }
+ = req.body;
+  if (!positive(quantity) || !positive(unitPrice))return res.status(400).json({
+    message: 'quantity and unitPrice must be greater than 0'
+  });
+  try {
+    const product = await activeProduct(productId);
+    const w = await Warehouse.findById(warehouseId);
+    if (!w)throw Object.assign(new Error('Warehouse not found'), {
+      status: 404
+    });
+    if (w.status === 'inactive')throw Object.assign(new Error('Warehouse is not active'), {
+      status: 400
+    });
+    const ledger = await Ledger.findOne({
+      productId,
+      warehouseId
+    });
+    const available = ledger?.quantity || 0, qty = Number(quantity);
+    if (available<qty)throw Object.assign(new Error(`Insufficient stock. Available: ${available} units, requested: ${qty}`), {
+      status: 409
+    });
+    ledger.quantity -= qty;
+    ledger.lastUpdated = new Date();
+    await ledger.save();
+    w.currentLoad = Math.max(0, w.currentLoad-qty);
+    if (w.status === 'full' && w.currentLoad<w.maxCapacity)w.status = 'active';
+    await w.save();
+    const transaction = await Transaction.create({
+      type: 'export',
+      productId,
+      warehouseId,
+      quantity: qty,
+      unitPrice: Number(unitPrice),
+      totalValue: qty*Number(unitPrice),
+      performedBy: req.user.userId,
+      note
+    });
+    const totals = await Ledger.aggregate([{
+      $match: {
+        productId: new mongoose.Types.ObjectId(productId)
+      }
+    }, {
+      $group: {
+        _id: null,
+        total: {
+          $sum: '$quantity'
+        }
+      }
+    }]);
+    const totalStock = totals[0]?.total || 0, response = transaction.toObject();
+    if (totalStock<product.reorderLevel)response.lowStockWarning = {
+      warning: `Low stock alert: ${product.name} is below reorder level (${product.reorderLevel} units)`
+    };
+    res.status(201).json(response)
+  } catch (e) {
+    fail(res, e)
+  }
+};
+exports.transferStock = async (req, res) => {
+  const {
+    productId,
+    sourceWarehouseId,
+    destinationWarehouseId,
+    quantity,
+    note
+  }
+ = req.body;
+  if (String(sourceWarehouseId) === String(destinationWarehouseId))return res.status(400).json({
+    message: 'Source and destination warehouse cannot be the same'
+  });
+  if (!positive(quantity))return res.status(400).json({
+    message: 'quantity must be greater than 0'
+  });
+  const session = await mongoose.startSession();
+  let records;
+  try {
+    await session.withTransaction(async () => {
+      const product = await activeProduct(productId, session);
+      const source = await warehouse(sourceWarehouseId, session);
+      const destination = await warehouse(destinationWarehouseId, session);
+      const qty = Number(quantity);
+      const sourceLedger = await Ledger.findOne({
+        productId,
+        warehouseId: sourceWarehouseId
+      }).session(session);
+      if ((sourceLedger?.quantity || 0)<qty)throw Object.assign(new Error('Insufficient stock in source warehouse'), {
+        status: 409
+      });
+      if (destination.currentLoad+qty>destination.maxCapacity)throw Object.assign(new Error('Destination warehouse has insufficient capacity'), {
+        status: 409
+      });
+      sourceLedger.quantity -= qty;
+      sourceLedger.lastUpdated = new Date();
+      await sourceLedger.save({
+        session
+      });
+      await Ledger.findOneAndUpdate({
+        productId,
+        warehouseId: destinationWarehouseId
+      }, {
+        $inc: {
+          quantity: qty
+        },
+        $set: {
+          lastUpdated: new Date()
+        }
+      }, {
+        upsert: true,
+        new: true,
+        session,
+        setDefaultsOnInsert: true
+      });
+      source.currentLoad -= qty;
+      destination.currentLoad += qty;
+      if (source.status === 'full' && source.currentLoad<source.maxCapacity)source.status = 'active';
+      if (destination.currentLoad >= destination.maxCapacity)destination.status = 'full';
+      await source.save({
+        session
+      });
+      await destination.save({
+        session
+      });
+      const base = Transaction.generateCode('TRF');
+      records = await Transaction.create([{
+        transactionCode: `${base}-OUT`,
+        type: 'transfer_out',
+        productId,
+        warehouseId: sourceWarehouseId,
+        destinationWarehouseId,
+        quantity: qty,
+        unitPrice: product.unitPrice,
+        totalValue: qty*product.unitPrice,
+        performedBy: req.user.userId,
+        note
+      }, {
+        transactionCode: `${base}-IN`,
+        type: 'transfer_in',
+        productId,
+        warehouseId: destinationWarehouseId,
+        destinationWarehouseId: sourceWarehouseId,
+        quantity: qty,
+        unitPrice: product.unitPrice,
+        totalValue: qty*product.unitPrice,
+        performedBy: req.user.userId,
+        note
+      }], {
+        session
+      })
+    });
+    res.status(201).json(records)
+  } catch (e) {
+    fail(res, e)
+  } finally {
+    await session.endSession()
+  }
+};

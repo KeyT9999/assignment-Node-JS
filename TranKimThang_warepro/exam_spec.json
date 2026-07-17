@@ -1,0 +1,404 @@
+{
+  "models": [
+    {
+      "name": "user",
+      "className": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "stock"
+        },
+        {
+          "name": "assignedWarehouse",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Warehouse",
+          "default": "null"
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true"
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    },
+    {
+      "name": "warehouse",
+      "className": "Warehouse",
+      "fields": [
+        {
+          "name": "code",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "maxCapacity",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "currentLoad",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "0"
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "active"
+        }
+      ]
+    },
+    {
+      "name": "product",
+      "className": "Product",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "unit",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "unitPrice",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "reorderLevel",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "stockLedger",
+      "className": "StockLedger",
+      "fields": [
+        {
+          "name": "productId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Product",
+          "default": null
+        },
+        {
+          "name": "warehouseId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Warehouse",
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "lastUpdated",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    },
+    {
+      "name": "stockTransaction",
+      "className": "StockTransaction",
+      "fields": [
+        {
+          "name": "transactionCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "productId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Product",
+          "default": null
+        },
+        {
+          "name": "warehouseId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Warehouse",
+          "default": null
+        },
+        {
+          "name": "destinationWarehouseId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Warehouse",
+          "default": "null"
+        },
+        {
+          "name": "quantity",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "unitPrice",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalValue",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "performedBy",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "User",
+          "default": null
+        },
+        {
+          "name": "note",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "now"
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "method": "POST",
+      "path": "/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login"
+    },
+    {
+      "method": "POST",
+      "path": "/products"
+    },
+    {
+      "method": "GET",
+      "path": "/products"
+    },
+    {
+      "method": "GET",
+      "path": "/products?lowStock=true"
+    },
+    {
+      "method": "POST",
+      "path": "/transactions/import"
+    },
+    {
+      "method": "POST",
+      "path": "/transactions/export"
+    },
+    {
+      "method": "POST",
+      "path": "/transactions/transfer"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/stock-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/transactions"
+    }
+  ],
+  "roles": [
+    "auditor",
+    "manager"
+  ],
+  "authRequired": true,
+  "signals": {
+    "overlap": false,
+    "inventory": true,
+    "payment": false,
+    "views": false,
+    "atomic": true,
+    "date_range": true
+  }
+}

@@ -1,0 +1,1 @@
+const r=require('express').Router(),c=require('../controllers/reservationController'),{protect}=require('../middlewares/authMiddleware');r.get('/',protect,c.list);r.post('/',protect,c.create);module.exports=r;

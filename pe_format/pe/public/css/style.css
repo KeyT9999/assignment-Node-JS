@@ -1,0 +1,252 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #ffffff;
+  color: #1f2937; /* xanh đậm */
+  margin: 0;
+  padding: 0;
+}
+
+header, footer {
+  background-color: #1d4ed8; /* xanh đậm */
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+header {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-bottom: 4px solid #1e40af;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+header p {
+  margin: 0.5rem 1rem 0 0;
+  font-size: 1rem;
+}
+
+header nav a {
+  background: white;
+  color: #1e40af;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+header nav a:hover {
+  background: #dbeafe;
+}
+
+main {
+  padding: 2rem;
+}
+
+form {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  max-width: 480px;
+  margin: auto;
+}
+
+input, button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+input:focus, button:hover {
+  border-color: #2563eb;
+  outline: none;
+  transform: scale(1.02);
+}
+
+button {
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #1d4ed8;
+}
+
+.dashboard {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.dashboard h2 {
+  color: #1d4ed8;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 1.5rem;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.highlight-number {
+  font-size: 2rem;
+  color: #1e40af;
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.button-group .btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-group .btn:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.registration-page {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.title {
+  text-align: center;
+  color: #1e40af;
+  margin-bottom: 2rem;
+}
+
+.search-form {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.search-form .date-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-form input[type="date"] {
+  padding: 0.5rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  transition: all 0.3s ease-in-out;
+}
+
+.search-form input:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.search-form .btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease-in-out;
+}
+
+.search-form .btn:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.styled-table th, .styled-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0f2f1;
+  text-align: left;
+}
+
+.styled-table th {
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+.styled-table tr:hover {
+  background-color: #eff6ff;
+}
+
+.event-page {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-success {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.btn-danger {
+  background-color: #f87171;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #ef4444;
+  transform: scale(1.05);
+}

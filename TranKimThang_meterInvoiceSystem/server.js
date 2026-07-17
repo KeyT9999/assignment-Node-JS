@@ -1,0 +1,17 @@
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express();
+app.use(express.json());
+mongoose.connect(process.env.MONGODB_URI);
+app.use('/auth', require('./routes/authRoutes'));
+app.use('/tariffs', require('./routes/route0Routes'));
+app.use('/customers', require('./routes/route1Routes'));
+app.use('/customers', require('./routes/route2Routes'));
+app.use('/readings', require('./routes/route3Routes'));
+app.use('/invoices/generate', require('./routes/route4Routes'));
+app.use('/invoices/:id/payments', require('./routes/route5Routes'));
+app.use('/reports/consumption-summary', require('./routes/route6Routes'));
+app.use('/reports/collection-summary', require('./routes/route7Routes'));
+app.listen(process.env.PORT || 9999);
+module.exports = app;

@@ -1,0 +1,22 @@
+[{
+  "_id": {
+    "$oid": "67c917290357ade5694b4043"
+  },
+  "description": "Thảo luận về xu hướng AI kết hợp Blockchain trong Fintech",
+  "date": "2025-03-10T09:00:00Z",
+  "location": "Hội trường A, ĐH FPT Đà Nẵng",
+  "capacity": 100,
+  "createdAt": "2025-02-20T10:00:00Z",
+  "name": "Hội thảo AI & Blockchain"
+},
+{
+  "_id": {
+    "$oid": "67cc4eaabe3634844b9f55bc"
+  },
+  "description": "Thảo luận PCCC",
+  "date": "2025-03-10",
+  "location": "Hội trường A, ĐH FPT Đà Nẵng",
+  "capacity": 100,
+  "createdAt": "2025-03-08",
+  "name": "Hội thảo PCCC"
+}]

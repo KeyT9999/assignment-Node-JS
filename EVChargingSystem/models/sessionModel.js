@@ -30,6 +30,13 @@ const sessionSchema = new mongoose.Schema({
   status: {
     type: String,
     default: "pending"
+  },
+  cancelReason: {
+    type: String,
+    default: ""
+  },
+  cancelledAt: {
+    type: Date
   }
 });
 
