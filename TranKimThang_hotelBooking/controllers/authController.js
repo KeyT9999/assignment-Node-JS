@@ -1,3 +1,0 @@
-const User=require('../models/userModel'),jwt=require('jsonwebtoken');
-exports.register=async(q,s)=>{try{if(await User.exists({username:q.body.username}))return s.status(409).json({message:'Username already exists'});const u=await User.create({username:q.body.username,password:q.body.password,role:'customer',createdAt:new Date()});s.status(201).json({id:u._id,username:u.username,role:u.role})}catch(e){s.status(400).json({message:e.message})}};
-exports.login=async(q,s)=>{const u=await User.findOne({username:q.body.username});if(!u||!await u.comparePassword(q.body.password||''))return s.status(401).json({message:'Invalid credentials'});s.json({token:jwt.sign({id:u._id,role:u.role},process.env.JWT_SECRET,{expiresIn:'1d'})})};

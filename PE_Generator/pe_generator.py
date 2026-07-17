@@ -31,6 +31,8 @@ from semantic_booking_generator import generate_semantic_booking_project
 from semantic_exam_generator import generate_semantic_exam_project
 from advanced_exam_generator import generate_advanced_project
 from js_formatter import format_javascript
+from postman_guide_generator import enrich_generated_guide
+from generated_project_hardening import harden_generated_project
 
 # Fix Windows terminal encoding for emoji/unicode
 if sys.platform == 'win32':
@@ -491,6 +493,24 @@ def generate_postman_collection(config):
     res_route = config["resource_route_path"]
     book_route = config["booking_route_path"]
     res_id_field = config["resource_id_field"]
+    is_ev = config.get("pricing_mode") == "EV"
+    resource_body = {
+        config["resource_code_field"]: "TEST-001",
+        "type": "FastCharge" if is_ev else "meetingRoom",
+        "status": "available",
+        config["price_field"]: 3850 if is_ev else 150000,
+        config["features_field"]: ["CCS2", "CHAdeMO"] if is_ev else ["projector", "whiteboard"],
+    }
+    if not is_ev:
+        resource_body["capacity"] = 8
+    booking_body = {
+        res_id_field: f"{{{{{rl}_id}}}}",
+        "startTime": "2027-08-01T08:00:00.000Z",
+        "endTime": "2027-08-01T10:00:00.000Z",
+    }
+    if is_ev:
+        booking_body["energyEstimate"] = 30.5
+    create_booking_route = f"{book_route}/book" if is_ev else book_route
     
     collection = {
         "info": {
@@ -501,7 +521,8 @@ def generate_postman_collection(config):
         },
         "variable": [
             {"key": "base_url", "value": base_url},
-            {"key": "token", "value": ""},
+            {"key": "admin_token", "value": ""},
+            {"key": "customer_token", "value": ""},
             {"key": f"{rl}_id", "value": ""}
         ],
         "item": [
@@ -541,7 +562,7 @@ def generate_postman_collection(config):
                                     "exec": [
                                         "var data = pm.response.json();",
                                         "if (data.token) {",
-                                        "    pm.collectionVariables.set('token', data.token);",
+                                        "    pm.collectionVariables.set('admin_token', data.token);",
                                         "}"
                                     ],
                                     "type": "text/javascript"
@@ -567,7 +588,7 @@ def generate_postman_collection(config):
                                     "exec": [
                                         "var data = pm.response.json();",
                                         "if (data.token) {",
-                                        "    pm.collectionVariables.set('token', data.token);",
+                                        "    pm.collectionVariables.set('customer_token', data.token);",
                                         "}"
                                     ],
                                     "type": "text/javascript"
@@ -605,22 +626,22 @@ def generate_postman_collection(config):
                     },
                     {
                         "name": f"Create {ru} (Admin)",
+                        "event": [{
+                            "listen": "test",
+                            "script": {"exec": [
+                                "var data = pm.response.json();",
+                                f"if (data._id) pm.collectionVariables.set('{rl}_id', data._id);",
+                            ], "type": "text/javascript"},
+                        }],
                         "request": {
                             "method": "POST",
                             "header": [
                                 {"key": "Content-Type", "value": "application/json"},
-                                {"key": "Authorization", "value": "Bearer {{token}}"}
+                                {"key": "Authorization", "value": "Bearer {{admin_token}}"}
                             ],
                             "body": {
                                 "mode": "raw",
-                                "raw": json.dumps({
-                                    config["resource_code_field"]: "TEST-001",
-                                    "type": "meetingRoom",
-                                    "capacity": 8,
-                                    "status": "available",
-                                    config["price_field"]: 150000,
-                                    config["features_field"]: ["projector", "whiteboard"]
-                                }, indent=2)
+                                "raw": json.dumps(resource_body, indent=2)
                             },
                             "url": {"raw": f"{{{{base_url}}}}{res_route}", "host": ["{{base_url}}"], "path": res_route.strip('/').split('/')}
                         }
@@ -634,7 +655,7 @@ def generate_postman_collection(config):
                         "name": f"Get {bu}s",
                         "request": {
                             "method": "GET",
-                            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+                            "header": [{"key": "Authorization", "value": "Bearer {{customer_token}}"}],
                             "url": {"raw": f"{{{{base_url}}}}{book_route}", "host": ["{{base_url}}"], "path": book_route.strip('/').split('/')}
                         }
                     },
@@ -644,17 +665,13 @@ def generate_postman_collection(config):
                             "method": "POST",
                             "header": [
                                 {"key": "Content-Type", "value": "application/json"},
-                                {"key": "Authorization", "value": "Bearer {{token}}"}
+                                {"key": "Authorization", "value": "Bearer {{customer_token}}"}
                             ],
                             "body": {
                                 "mode": "raw",
-                                "raw": json.dumps({
-                                    res_id_field: f"{{{{{rl}_id}}}}",
-                                    "startTime": "2026-08-01T08:00:00.000Z",
-                                    "endTime": "2026-08-01T10:00:00.000Z"
-                                }, indent=2)
+                                "raw": json.dumps(booking_body, indent=2)
                             },
-                            "url": {"raw": f"{{{{base_url}}}}{book_route}", "host": ["{{base_url}}"], "path": book_route.strip('/').split('/')}
+                            "url": {"raw": f"{{{{base_url}}}}{create_booking_route}", "host": ["{{base_url}}"], "path": create_booking_route.strip('/').split('/')}
                         }
                     }
                 ]
@@ -1262,6 +1279,9 @@ def _generate_project_unformatted(config, dry_run=False):
     generated_files["README.md"] = generate_readme(config)
     generated_files["POSTMAN_GUIDE.md"] = generate_postman_guide(config)
     
+    postman_json = generate_postman_collection(config)
+    generated_files[f"{project_name}.postman_collection.json"] = postman_json
+
     if dry_run:
         return generated_files, output_path, cleanup_log
         
@@ -1272,12 +1292,9 @@ def _generate_project_unformatted(config, dry_run=False):
         with open(full_output, "w", encoding="utf-8") as f:
             f.write(content)
             
-    postman_json = generate_postman_collection(config)
     postman_path = os.path.join(output_path, f"{project_name}.postman_collection.json")
     with open(postman_path, "w", encoding="utf-8") as f:
         f.write(postman_json)
-    generated_files[f"{project_name}.postman_collection.json"] = postman_json
-    
     return generated_files, output_path, cleanup_log
 
 
@@ -1292,6 +1309,17 @@ def generate_project(config, dry_run=False):
             if not dry_run:
                 target=os.path.join(output_path,relative)
                 with open(target,'w',encoding='utf-8') as fh:fh.write(files[relative])
+    log.extend(harden_generated_project(files, config))
+    if enrich_generated_guide(files, config["project_name"]):
+        if not dry_run:
+            target=os.path.join(output_path,"POSTMAN_GUIDE.md")
+            with open(target,'w',encoding='utf-8') as fh:fh.write(files["POSTMAN_GUIDE.md"])
+        log.append("Generated detailed Postman guide from collection")
+    if not dry_run:
+        for relative,content in files.items():
+            target=os.path.join(output_path,relative)
+            os.makedirs(os.path.dirname(target),exist_ok=True)
+            with open(target,'w',encoding='utf-8') as fh:fh.write(content)
     return files,output_path,log+["Auto-formatted generated JavaScript (offline)"]
 
 

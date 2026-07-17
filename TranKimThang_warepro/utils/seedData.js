@@ -54,6 +54,12 @@ const mongoose = require('mongoose'), connectDB = require('../config/db'), Wareh
       password: '123456',
       fullName: 'Inventory Auditor',
       role: 'auditor'
+    }, {
+      username: 'deactivated1',
+      password: '123456',
+      fullName: 'Deactivated User',
+      role: 'stock_keeper',
+      isActive: false
     }]);
     await Ledger.create({
       productId: products[0]._id,

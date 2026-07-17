@@ -65,10 +65,13 @@ def _user_code(meta):
 
 def generate_advanced_project(config,dry_run=False):
     key=config['recognized_domain'];meta=META[key];spec=config['exam_spec'];files={}
-    files['package.json']=json.dumps({'name':config['project_name'].lower(),'version':'1.0.0','main':'server.js','scripts':{'start':'node server.js','dev':'nodemon server.js'},'dependencies':{'bcryptjs':'^2.4.3','dotenv':'^16.4.5','express':'^4.19.2','jsonwebtoken':'^9.0.2','mongoose':'^8.5.1'},'devDependencies':{'nodemon':'^3.1.4'}},indent=2)
+    files['package.json']=json.dumps({'name':config['project_name'].lower(),'version':'1.0.0','main':'server.js','scripts':{'start':'node server.js','dev':'nodemon server.js','seed':'node utils/seedData.js'},'dependencies':{'bcryptjs':'^2.4.3','dotenv':'^16.4.5','express':'^4.19.2','jsonwebtoken':'^9.0.2','mongoose':'^8.5.1'},'devDependencies':{'nodemon':'^3.1.4'}},indent=2)
     files['.env']='PORT=9999\nMONGODB_URI=mongodb://127.0.0.1:27017/'+config['db_name']+'\nJWT_SECRET=change-me\n'
     for model in spec['models']:files[f"models/{model['name']}Model.js"]=_upgrade_model(key,model['name'],_model_code(model))
     files['models/userModel.js']=_user_code(meta);files['middlewares/authMiddleware.js']=MIDDLEWARE
+    files['utils/seedData.js']=f"""require('dotenv').config();const mongoose=require('mongoose'),User=require('../models/userModel');
+(async()=>{{try{{await mongoose.connect(process.env.MONGODB_URI);await User.deleteMany();await User.create({{username:'manager1',password:'123456',fullName:'System Manager',role:'{meta['manager']}',isActive:true}});console.log('Advanced manager seed completed');}}catch(e){{console.error(e);process.exitCode=1;}}finally{{await mongoose.connection.close();}}}})();
+"""
     files['controllers/authController.js']=AUTH.replace('__MANAGER__',meta['manager']).replace('__WORKER__',meta['worker']).replace('__ASSIGNED__',meta['assigned'])
     for name,code in CODE[key].items():files[f'controllers/{name}Controller.js']=code
     files['routes/authRoutes.js']="const r=require('express').Router(),c=require('../controllers/authController'),{verifyToken}=require('../middlewares/authMiddleware');r.post('/register',verifyToken,c.register);r.post('/login',c.login);module.exports=r;\n"
