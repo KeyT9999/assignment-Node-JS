@@ -1,0 +1,32 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({
+  customerName: {
+    type: String,
+    required: true
+  },
+  theaterName: {
+    type: String,
+    required: true
+  },
+  movieName: {
+    type: String,
+    required: true
+  },
+  showTime: {
+    type: Date,
+    required: true
+  },
+  numberOfTickets: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  }
+}, {
+  timestamps: true
+});
+module.exports = mongoose.model('Booking', schema);

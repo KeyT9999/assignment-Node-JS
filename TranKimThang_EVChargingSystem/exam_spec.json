@@ -1,0 +1,206 @@
+{
+  "models": [
+    {
+      "name": "user",
+      "className": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "balance",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "station",
+      "className": "Station",
+      "fields": [
+        {
+          "name": "stationCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "pricePerKwh",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "connectors",
+          "type": "[String]",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "session",
+      "className": "Session",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "User",
+          "default": null
+        },
+        {
+          "name": "stationId",
+          "type": "ObjectId",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": "Station",
+          "default": null
+        },
+        {
+          "name": "startTime",
+          "type": "Date",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "endTime",
+          "type": "Date",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "energyEstimate",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalCost",
+          "type": "Number",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "Status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "method": "POST",
+      "path": "/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login"
+    },
+    {
+      "method": "GET",
+      "path": "/sessions"
+    },
+    {
+      "method": "POST",
+      "path": "/sessions/book"
+    }
+  ],
+  "roles": [
+    "admin",
+    "customer"
+  ],
+  "authRequired": true,
+  "signals": {
+    "overlap": true,
+    "inventory": false,
+    "payment": true,
+    "views": false,
+    "atomic": false,
+    "date_range": false
+  }
+}

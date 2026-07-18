@@ -1,0 +1,10 @@
+require('dotenv').config();
+const express = require('express'), mongoose = require('mongoose');
+const app = express();
+app.use(express.json());
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/parcelDelivery');
+app.use('/auth', require('./routes/authRoutes'));
+app.use('/delivery-zones', require('./routes/deliveryZoneRoutes'));
+app.use('/shipments', require('./routes/shipmentRoutes'));
+app.listen(process.env.PORT || 9999);
+module.exports = app;

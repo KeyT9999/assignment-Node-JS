@@ -409,7 +409,7 @@ class ExamParser:
         best_domain = None
         best_score = 0
         for domain, info in cls.DOMAIN_PATTERNS.items():
-            score = sum(1 for kw in info['keywords'] if kw in text_lower)
+            score = sum(1 for kw in info['keywords'] if re.search(r'\b' + re.escape(kw) + r'\b', text_lower))
             if score > best_score:
                 best_score = score
                 best_domain = domain

@@ -1,0 +1,30 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({
+  doctorCode: {
+    type: String,
+    unique: true,
+    required: true,
+    trim: true
+  },
+  fullName: {
+    type: String,
+    required: true
+  },
+  specialty: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['available',
+    'on_leave',
+    'retired'],
+    default: 'available'
+  },
+  consultationFee: {
+    type: Number,
+    required: true,
+    min: 0
+  }
+});
+module.exports = mongoose.model('Doctor', schema);

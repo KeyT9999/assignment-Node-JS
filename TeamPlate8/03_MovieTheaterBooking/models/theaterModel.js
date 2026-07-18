@@ -1,0 +1,26 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({
+  theaterName: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  location: {
+    type: String,
+    required: true
+  },
+  seatCapacity: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  screenType: {
+    type: String,
+    required: true
+  },
+  amenities: [{
+    type: String
+  }]
+});
+module.exports = mongoose.model('Theater', schema);

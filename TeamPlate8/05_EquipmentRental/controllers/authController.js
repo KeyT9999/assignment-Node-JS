@@ -1,0 +1,70 @@
+const User = require('../models/userModel');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+exports.register = async (req, res) => {
+  try {
+    const {
+      username,
+      password
+    }
+ = req.body;
+    if (!username || !password) return res.status(400).json({
+      message: 'Username and password are required'
+    });
+    if (await User.findOne({
+      username
+    })) return res.status(400).json({
+      message: 'Username already exists'
+    });
+    const user = await User.create({
+      username,
+      password: await bcrypt.hash(password,
+      10),
+      role: 'customer'
+    });
+    return res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      role: user.role,
+      createdAt: user.createdAt
+    });
+  }  catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};
+exports.login = async (req, res) => {
+  try {
+    const {
+      username,
+      password
+    }
+ = req.body;
+    const user = await User.findOne({
+      username
+    });
+    if (!user || !(await bcrypt.compare(password || '', user.password))) return res.status(401).json({
+      message: 'Invalid username or password'
+    });
+    const token = jwt.sign({
+      id: user._id,
+      username: user.username,
+      role: user.role
+    }, process.env.JWT_SECRET || 'sdn302_secret_key', {
+      expiresIn: '30d'
+    });
+    return res.json({
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        role: user.role
+      }
+    });
+  }  catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+};

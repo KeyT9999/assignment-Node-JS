@@ -1,0 +1,43 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({
+  patientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Doctor',
+    required: true
+  },
+  patientName: {
+    type: String,
+    required: true
+  },
+  appointmentTime: {
+    type: Date,
+    required: true
+  },
+  completedAt: {
+    type: Date,
+    default: null
+  },
+  totalFee: {
+    type: Number,
+    default: null
+  },
+  note: {
+    type: String,
+    default: ''
+  }
+});
+schema.index({
+  doctorId: 1,
+  appointmentTime: 1
+}, {
+  unique: true,
+  partialFilterExpression: {
+    completedAt: null
+  }
+});
+module.exports = mongoose.model('Appointment', schema);

@@ -1,346 +1,396 @@
+Practical Examination
 
+Subject Code: SDN302
+Duration: 85 minutes
+Exam:  Laboratory Sample, Testing & Reagent Management System
 
-| WarePro — Smart Warehouse & Inventory Management System (Hệ thống Quản lý Kho & Tồn kho Thông minh) |
-| :---: |
+Requirements
 
-You are building the backend API for **WarePro** — a warehouse management platform used by **DaNang Logistics Co.**, operating 3 physical warehouses across Da Nang. The system tracks products, manages supplier import orders, controls inter-warehouse stock transfers, and enforces strict inventory integrity rules.
+You are tasked with building a laboratory sample, testing, and reagent management system. The system will manage laboratories, test catalogues, patient samples, reagent inventory, test execution, quality controls, and audit reports with Login and Role-based Access Control (RBAC) according to the following requirements.
 
-**Three roles operate in the system:**
+1. Project Initialization (0.5 point)
 
-* warehouse\_manager  — full control: products, suppliers, reports, user management
+- Create a project folder named: <yourname>_labTrack
 
-* stock\_keeper  — executes stock-in (import) and stock-out (export) transactions
+- Initialize a Node.js project using npm init
 
-* auditor  — read-only access to all inventory data and transaction history
+- Install the required libraries: express, mongoose, bcrypt, jsonwebtoken, and dotenv
 
-Use database: **warepro.json**
+- Use server.js as the entry point; load PORT and MONGODB_URI from .env
 
-**1\.  Project Initialization  (0.5 pt)**
+2. Authentication & Authorization (1.5 points)
 
-* Folder name: 
+2.1. User Schema & Model (0.5 point)
 
-  \<projectname\>\_warepro
+Create userModel.js with the following fields:
 
-* Run npm init; install: express, mongoose, bcrypt, jsonwebtoken, dotenv
+- username: String, unique and required
 
-* Entry point: server.js  |  PORT and MONGODB\_URI loaded from .env
+- password: String, required and hashed using bcrypt
 
-**2\.  Authentication & RBAC  (1.5 pts)**
+- fullName: String, required
 
-**2.1  User Schema  (0.5 pt)**
+- role: String ('laboratory_manager', 'laboratory_technician', or 'quality_auditor')
 
-* File: models/userModel.js
+- assignedLaboratory: ObjectId, referenced from the Laboratory schema
 
-* username (String, unique, required)
+- isActive: Boolean, default = true
 
-* password (String, required — bcrypt hashed via pre-save hook)
+- createdAt: Date, default = current time
 
-* fullName (String, required)
+2.2. Register & Login API (1 point)
 
-* role (String, enum: \['warehouse\_manager','stock\_keeper','auditor'\], default: 'stock\_keeper')
+- POST /auth/register: Only laboratory_manager may register new users.
 
-* assignedWarehouse (ObjectId, ref: 'Warehouse', default: null) — the warehouse this user is assigned to
+- Return 409 if the username already exists.
 
-* isActive (Boolean, default: true)
+- Do not allow another laboratory_manager account to be created through this API.
 
-* createdAt (Date, default: now)
+- A laboratory_technician account must include assignedLaboratory.
 
-**2.2  Register & Login  (1 pt)**
+- POST /auth/login: Authenticate credentials and return a JWT token.
 
-**POST /auth/register**
+- Return 401 for incorrect credentials and 403 for a deactivated account.
 
-* Only warehouse\_manager may register new users (verified from JWT) → 403 otherwise
+The token must include userId, role, fullName, and assignedLaboratory.
 
-* Return 409 if username already exists
+3. Management (7.5 points)
 
-* warehouse\_manager accounts cannot be created via this endpoint → 400: "Cannot register another manager via API"
+3.1. Laboratory, Test Catalogue & Reagent Schemas and Models (2 points)
 
-**POST /auth/login**
+Create laboratoryModel.js with the following fields:
 
-* Authenticate with bcrypt; return JWT containing: userId, role, fullName, assignedWarehouse
+- laboratoryCode (String): Unique code of the laboratory.
 
-* Return 401 if credentials are wrong
+- name (String): Laboratory name.
 
-* Return 403 if isActive \= false  ("Account is deactivated. Contact your manager.")
+- location (String): Physical location.
 
-| 📸  Postman Requirement: Screenshot: register success; register 403 (non-manager caller); register 400 (trying to create a manager). Login success; login 403 deactivated account. |
-| :---- |
+- maximumActiveSamples (Number): Maximum number of samples being processed.
 
-**3\.  Warehouse & Product Management  (2 pts)**
+- currentActiveSamples (Number): Current number of active samples, default = 0.
 
-**3.1  Warehouse Schema  (0.5 pt)**
+- status (String): 'active', 'inactive', or 'full'.
 
-* File: models/warehouseModel.js
+{
+"laboratoryCode": "LAB-01",
+"name": "CentralCare Main Laboratory",
+"location": "Da Nang",
+"maximumActiveSamples": 120,
+"currentActiveSamples": 35,
+"status": "active"
+}
 
-* code (String, unique, required) — e.g. 'WH-01', 'WH-02'
+File: testCatalogueModel.js (0.5 point)
 
-* name (String, required)
+- testCode (String): Unique code of the medical test.
 
-* location (String, required)
+- name (String): Name of the test.
 
-* maxCapacity (Number, required) — maximum total units storable
+- category (String): e.g. 'hematology', 'biochemistry', or 'microbiology'.
 
-* currentLoad (Number, default: 0\) — total units currently stored across all products
+- sampleType (String): e.g. 'blood', 'urine', or 'swab'.
 
-* status (String, enum: \['active','inactive','full'\], default: 'active')
+- standardFee (Number): Standard test fee, greater than 0.
 
-**3.2  Product Schema  (0.5 pt)**
+- estimatedMinutes (Number): Estimated processing time.
 
-* File: models/productModel.js
+- requiredReagents (Array): reagentId and quantityRequired for each reagent.
 
-* sku (String, unique, required) — Stock Keeping Unit, e.g. 'SKU-0042'
+- isActive (Boolean): Default = true.
 
-* name (String, required)
+File: reagentModel.js and reagentLedgerModel.js (1 point)
 
-* category (String, required) — e.g. 'electronics', 'furniture', 'food'
+- reagentCode (String): Unique reagent code.
 
-* unit (String, required) — e.g. 'pcs', 'kg', 'box'
+- name (String): Reagent name.
 
-* unitPrice (Number, required, \> 0\)
+- unit (String): e.g. 'ml', 'kit', or 'strip'.
 
-* reorderLevel (Number, required) — if total stock across all warehouses drops below this → flag as low stock
+- unitCost (Number): Cost per unit, greater than 0.
 
-* isActive (Boolean, default: true)
+- reorderLevel (Number): Low-stock threshold.
 
-**3.3  Product APIs  (1 pt)**
+- isActive (Boolean): Default = true.
 
-**POST /products  (warehouse\_manager only)**
+- reagentId (ObjectId): Referenced from Reagent.
 
-* Create a new product; return 409 if SKU already exists
+- laboratoryId (ObjectId): Referenced from Laboratory.
 
-* Return 400 if unitPrice ≤ 0
+- batchNumber (String): Reagent batch number.
 
-**GET /products  (all roles)**
+- expiryDate (Date): Expiry date of the batch.
 
-* Support query param: ?category=electronics
+- quantity (Number): Current quantity in the batch.
 
-* Support query param: ?lowStock=true  → return only products whose total stock across all warehouses is below reorderLevel
+- lastUpdated (Date): Default = current time.
 
-| 💡  Note: For ?lowStock=true, aggregate total stock from the StockLedger model (Section 4.1) grouped by productId. Products not present in the ledger have 0 stock. |
-| :---- |
-| **📸  Postman Requirement:** Screenshot: POST /products success \+ 409 duplicate SKU. GET /products?lowStock=true showing at least one flagged product. |
+The combination of reagentId, laboratoryId, and batchNumber must be unique.
 
-**4\.  Inventory & Stock Transactions  (4 pts)**
+{
+"reagentId": "65fd9dc542e1a12345678902",
+"laboratoryId": "65fd9d9b42e1a12345678901",
+"batchNumber": "BATCH-RG-2026-08",
+"expiryDate": "2027-08-30T00:00:00.000Z",
+"quantity": 500,
+"lastUpdated": "2026-07-17T08:00:00.000Z"
+}
 
-**4.1  Stock Ledger Schema  (1 pt)**
+3.2. Sample, Test Execution & Transaction Models (1.5 points)
 
-**File: models/stockLedgerModel.js**
+File: sampleModel.js (0.5 point)
 
-This model tracks per-product, per-warehouse stock levels AND every transaction that changed them.
+- sampleCode (String): Unique, auto-generated in format SMP-YYYYMMDD-XXX.
 
-* productId (ObjectId, ref: 'Product', required)
+- patientCode (String): Patient identifier.
 
-* warehouseId (ObjectId, ref: 'Warehouse', required)
+- patientName (String): Patient name.
 
-* quantity (Number, required) — current quantity of this product in this warehouse
+- laboratoryId (ObjectId): Referenced from Laboratory.
 
-* lastUpdated (Date, default: now)
+- testId (ObjectId): Referenced from Test Catalogue.
 
-**The combination of (productId \+ warehouseId) must be unique.**
+- sampleType (String): Type of sample.
 
-{ unique: true } on compound index: { productId: 1, warehouseId: 1 }
+- collectedAt (Date): Collection time.
 
-**File: models/stockTransactionModel.js**
+- receivedAt (Date): Default = current time.
 
-* transactionCode (String, unique, auto-generated) — format: TXN-YYYYMMDD-XXX
+- startedAt (Date): Null by default.
 
-* type (String, enum: \['import','export','transfer\_out','transfer\_in'\], required)
+- completedAt (Date): Null by default.
 
-* productId (ObjectId, ref: 'Product', required)
+- status (String): 'received', 'in_progress', 'completed', 'rejected', or 'cancelled'.
 
-* warehouseId (ObjectId, ref: 'Warehouse', required) — source warehouse
+- priority (String): 'routine' or 'urgent'.
 
-* destinationWarehouseId (ObjectId, ref: 'Warehouse', default: null) — used for transfers only
+- registeredBy (ObjectId): Retrieved from JWT.
 
-* quantity (Number, required, \> 0\)
+File: testExecutionModel.js and reagentTransactionModel.js (1 point)
 
-* unitPrice (Number, required) — price at time of transaction (snapshot)
+- executionCode (String): Unique test execution code.
 
-* totalValue (Number) — auto-computed: quantity × unitPrice
+- sampleId (ObjectId): Referenced from Sample and unique.
 
-* performedBy (ObjectId, ref: 'User') — from JWT
+- reagentCost (Number): Total cost of consumed reagents.
 
-* note (String, optional)
+- testFee (Number): Fee from the Test Catalogue.
 
-* createdAt (Date, default: now)
+- totalCost (Number): testFee + reagentCost.
 
-**4.2  Stock Transaction APIs  (3 pts)**
+- resultSummary (String): Test result summary.
 
-**POST /transactions/import  —  Stock In  (1 pt)**
+- resultStatus (String): 'pending', 'normal', 'abnormal', or 'inconclusive'.
 
-Accessible by: stock\_keeper, warehouse\_manager
+- transactionCode (String): Unique reagent transaction code.
 
-**Validation:**
+- type (String): 'restock', 'consume', 'transfer_out', or 'transfer_in'.
 
-* quantity must be \> 0 → 400
+- batchNumber (String): Reagent batch used in the transaction.
 
-* unitPrice must be \> 0 → 400
+- quantity (Number): Transaction quantity, greater than 0.
 
-* Product must exist and isActive \= true → 404 / 400
+- unitCost (Number): Snapshot of reagent cost.
 
-* Warehouse must exist and status \= 'active' → 400: "Warehouse is not active"
+- totalValue (Number): quantity × unitCost.
 
-**Warehouse Capacity Check (Advanced):**
+- performedBy (ObjectId): Retrieved from JWT.
 
-* If warehouse.currentLoad \+ quantity \> warehouse.maxCapacity → return 409:
+3.3. Implement the following RESTful API endpoints (4 points)
 
-  *   "Insufficient warehouse capacity. Available: {maxCapacity − currentLoad} units"
+- POST /reagents/restock (0.5 point)
 
-**On success:**
+Function: Add reagent stock to a laboratory.
 
-* Upsert StockLedger: if (productId \+ warehouseId) exists → increment quantity; else create with quantity
+✓ Input Validation:
 
-* Increment warehouse.currentLoad by quantity
+Ensure quantity > 0, expiryDate is in the future, and both Reagent and Laboratory are active.
 
-* Auto-set warehouse.status \= 'full' if currentLoad reaches maxCapacity after import
+✓ Batch Integrity:
 
-* Create StockTransaction with type='import', auto-generate transactionCode, compute totalValue
+Upsert by reagentId, laboratoryId, and batchNumber. If the batch exists, its expiryDate must match.
 
-* performedBy from JWT — never from request body
+✓ Data Integrity:
 
-| 📸  Postman Requirement: Screenshot: import success 201 with transactionCode \+ totalValue; import 409 capacity exceeded. |
-| :---- |
+Create the stock update and restock transaction consistently.
 
-**POST /transactions/export  —  Stock Out  (1 pt)**
+- GET /reagents (0.5 point)
 
-Accessible by: stock\_keeper, warehouse\_manager
+Function: Retrieve reagents and current stock information.
 
-**Validation:**
+✓ Role Access:
 
-* quantity \> 0 → 400
+All authenticated roles may access this API.
 
-* Product and Warehouse must exist and be active
+✓ Query Filters:
 
-**Stock Availability Check (Advanced):**
+Support laboratoryId, expiringSoon=true&days=30, and lowStock=true.
 
-* Find StockLedger for (productId \+ warehouseId)
+✓ Low-Stock Logic:
 
-* If not found or ledger.quantity \< requested quantity → return 409:
+Aggregate only non-expired quantities and compare total stock with reorderLevel.
 
-  *   "Insufficient stock. Available: {ledger.quantity} units, requested: {quantity}"
+- POST /samples (0.75 point)
 
-**On success:**
+Function: Register a new patient sample.
 
-* Decrement StockLedger.quantity by quantity
+✓ Input Validation:
 
-* Decrement warehouse.currentLoad by quantity
+The test and laboratory must be active; sampleType must match the Test Catalogue.
 
-* If warehouse.status \= 'full' and new currentLoad \< maxCapacity → reset status \= 'active'
+✓ Collection-Time Validation:
 
-* Create StockTransaction with type='export', auto-generate transactionCode, compute totalValue
+collectedAt cannot be in the future or more than 24 hours before the current server time.
 
-| 💡  Note: After export, check if the product's total stock across all warehouses falls below product.reorderLevel. If so, attach a lowStockWarning field in the response: { warning: "Low stock alert: {product.name} is below reorder level ({reorderLevel} units)" } |
-| :---- |
-| **📸  Postman Requirement:** Screenshot: export success with totalValue (+ lowStockWarning if triggered); export 409 insufficient stock. |
+✓ Laboratory Capacity:
 
-**POST /transactions/transfer  —  Inter-Warehouse Transfer  (1 pt)**
+Reject the request if currentActiveSamples has reached maximumActiveSamples.
 
-Accessible by: warehouse\_manager only
+✓ Authorization:
 
-Request body: productId, sourceWarehouseId, destinationWarehouseId, quantity, note
+A technician may only register samples at assignedLaboratory.
 
-**Validation:**
+✓ On Success:
 
-* sourceWarehouseId must not equal destinationWarehouseId → 400: "Source and destination warehouse cannot be the same"
+Create the sample, increment currentActiveSamples, and set laboratory status to 'full' when necessary.
 
-* Both warehouses must exist and be active
+- POST /samples/:id/start-test (1.25 points)
 
-* Product must exist and isActive \= true
+Function: Start a test and consume required reagents.
 
-**Stock & Capacity Checks (both must pass before any write):**
+✓ Sample Validation:
 
-* Source: StockLedger quantity \>= requested quantity → else 409: "Insufficient stock in source warehouse"
+The sample must have status 'received' and belong to the technician's assigned laboratory.
 
-* Destination: currentLoad \+ quantity \<= maxCapacity → else 409: "Destination warehouse has insufficient capacity"
+✓ FEFO Reagent Check:
 
-**On success (atomic — all writes or none):**
+Use non-expired reagent batches in expiryDate ascending order: First Expired, First Out.
 
-* Decrement source StockLedger.quantity; decrement source warehouse.currentLoad
+✓ Stock Availability:
 
-* Upsert destination StockLedger; increment destination warehouse.currentLoad
+All required reagents must be sufficient before any database write is performed.
 
-* Update warehouse statuses (full/active) for both warehouses after changes
+✓ Atomic Processing:
 
-* Create TWO StockTransaction records: one type='transfer\_out' (source), one type='transfer\_in' (destination)
+Deduct all reagent quantities, create consume transactions, create TestExecution, and set Sample status to 'in_progress' as one consistent operation.
 
-* Both share the same transactionCode prefix (e.g. TRF-YYYYMMDD-XXX)
+✓ Automatic Cost Calculation:
 
-| 📸  Postman Requirement: Screenshot: transfer success returning both transaction records; transfer 409 insufficient source stock; transfer 400 same warehouse. |
-| :---- |
+reagentCost = sum of consumed quantity × unitCost; totalCost = standardFee + reagentCost.
 
-**5\.  Reports & Audit  (1.5 pts)**
+✓ Low-Stock Warning:
 
-**GET /reports/stock-summary  (0.75 pt)**
+Return a warning when the remaining non-expired stock falls below reorderLevel.
 
-Accessible by: warehouse\_manager, auditor
+- PATCH /samples/:id/complete (1 point)
 
-Return a summary of current stock levels grouped by warehouse:
+Function: Complete or reject a laboratory test.
 
-* For each warehouse, list: warehouseCode, warehouseName, currentLoad, maxCapacity, utilizationPercent (currentLoad / maxCapacity × 100, rounded to 1 decimal)
+✓ Complete Action:
 
-* Under each warehouse, list all products stored there with their current quantity from StockLedger
+The sample must be 'in_progress'; resultStatus and resultSummary are required.
 
-* Support query param: ?warehouseId=\<id\>  to filter for a single warehouse
+✓ Reject Action:
 
-| 📸  Postman Requirement: Screenshot: full summary (all warehouses) and filtered ?warehouseId= response. |
-| :---- |
+The sample must be 'received' or 'in_progress'; rejectionReason is required.
 
-**GET /reports/transactions  (0.75 pt)**
+✓ On Success:
 
-Accessible by: warehouse\_manager, auditor
+Update the sample and TestExecution, decrement currentActiveSamples, and reset a full laboratory to active when capacity becomes available.
 
-* Return all stock transactions with populated productId (sku, name) and performedBy (username, fullName)
+✓ Turnaround Calculation:
 
-* Support query param: ?type=import  (filter by transaction type)
+For completed samples, return turnaroundMinutes = completedAt - receivedAt.
 
-* Support query param: ?warehouseId=\<id\>  (filter by source warehouse)
+- GET /reports/sample-turnaround (0.5 point)
 
-* Support query param: ?from=YYYY-MM-DD\&to=YYYY-MM-DD  (filter by date range on createdAt)
+Function: Return sample turnaround statistics.
 
-* All params may be combined; default \= return all
+✓ Access:
 
-| 📸  Postman Requirement: Screenshot: full transaction list; filtered by ?type=transfer\_out; filtered by date range. |
-| :---- |
+Only laboratory_manager and quality_auditor may access the report.
 
-**6\.  Project Structure  (0.5 pt)**
+✓ Report Logic:
 
-* /models          — userModel, warehouseModel, productModel, stockLedgerModel, stockTransactionModel
+Group completed samples by laboratory and test, and calculate completed count, average turnaround, and urgent sample count.
 
-* /controllers     — authController, productController, transactionController, reportController
+✓ Filters:
 
-* /routes          — one router file per domain
+Support laboratoryId, testId, from, and to.
 
-* /middleware      — verifyToken(req,res,next), requireRole(...roles)
+- GET /reports/reagent-usage (0.5 point)
 
-* server.js \+ .env at root
+Function: Return reagent consumption and stock statistics.
 
-**7\.  Submission Requirements**
+✓ Access:
 
-* All .js source files \+ package.json \+ .env (placeholder values only)
+Only laboratory_manager and quality_auditor may access the report.
 
-* warepro.json — seed data provided with exam
+✓ Report Logic:
 
-* README.md: install guide, run steps, sample accounts, full Postman testing sequence
+Group consume transactions by reagent and laboratory, including total quantity, total value, and current non-expired stock.
 
-* All Postman screenshots labelled by endpoint and test case
+✓ Filters:
 
-**Sample Test Accounts**
+Support reagentId, laboratoryId, from, and to.
 
-| Role | Username | Password | Permissions |
-| :---- | :---- | :---- | :---- |
-| warehouse\_manager | manager1 | 123456 | Register users, manage products, transfers, view all reports |
-| stock\_keeper | keeper1 | 123456 | Perform import and export transactions |
-| auditor | auditor1 | 123456 | Read-only: view all stock and transaction reports |
+4. Project Structure (0.5 point)
 
-**Score Summary**
+Organize your code using the Model – Controller – Routes (MCR) pattern:
 
-| Section | Points | Postman Screenshots |
-| :---- | :---: | :---: |
-| 1\. Project Initialization | 0.5 | — |
-| 2\. Auth & RBAC | 1.5 | 5 |
-| 3\. Warehouse & Product Management | 2.0 | 3 |
-| 4\. Inventory & Stock Transactions | 4.0 | 7 |
-| 5\. Reports & Audit | 1.5 | 5 |
-| 6\. Project Structure | 0.5 | — |
-| **TOTAL** | **10.0** | **20** |
+/models
+
+/controllers
+
+/routes
+
+/middleware
+
+server.js and .env at the project root
+
+5. Submission Requirements
+
+Your submission must include all .js files, package.json, .env with placeholder values, labtrack.json seed data, and README.md with:
+
+✓ Installation and running instructions
+
+✓ Postman testing guide
+
+✓ Example laboratory_manager, laboratory_technician, and quality_auditor accounts
+
+✓ Labelled Postman screenshots for successful and failed test cases
+
+Sample Test Accounts
+
+Role
+
+Username
+
+Password
+
+Description
+
+Laboratory Manager
+
+labManager1
+
+123456
+
+Manages users, laboratories, catalogues, reagents, and reports
+
+Laboratory Technician
+
+technician1
+
+123456
+
+Registers samples and performs tests at the assigned laboratory
+
+Quality Auditor
+
+labAuditor1
+
+123456
+
+Views sample, reagent usage, and quality audit reports
 

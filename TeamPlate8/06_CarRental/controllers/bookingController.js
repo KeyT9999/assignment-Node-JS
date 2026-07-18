@@ -1,0 +1,77 @@
+const Booking = require('../models/bookingModel');
+const {
+  validateAndPrice
+}
+ = require('../utils/bookingUtils');
+exports.getBookings = async (_req, res) => res.json(await Booking.find().sort({
+  startDate: 1
+}));
+exports.createBooking = async (req, res) => {
+  try {
+    const {
+      customerName,
+      carNumber,
+      startDate,
+      endDate
+    }
+ = req.body;
+    if (!customerName) return res.status(400).json({
+      message: 'customerName is required'
+    });
+    const priced = await validateAndPrice({
+      carNumber,
+      startDate,
+      endDate
+    });
+    return res.status(201).json(await Booking.create({
+      customerName,
+      carNumber,
+      startDate: priced.start,
+      endDate: priced.end,
+      totalAmount: priced.totalAmount
+    }));
+  }  catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message
+    });
+  }
+};
+exports.updateBooking = async (req, res) => {
+  try {
+    const current = await Booking.findById(req.params.bookingId);
+    if (!current) return res.status(404).json({
+      message: 'Booking not found'
+    });
+    const data = {
+      customerName: req.body.customerName ?? current.customerName,
+      carNumber: req.body.carNumber ?? current.carNumber,
+      startDate: req.body.startDate ?? current.startDate,
+      endDate: req.body.endDate ?? current.endDate
+    };
+    if (!data.customerName) return res.status(400).json({
+      message: 'customerName is required'
+    });
+    const priced = await validateAndPrice({
+      ...data,
+      excludeBookingId: current._id
+    });
+    Object.assign(current, data, {
+      startDate: priced.start,
+      endDate: priced.end,
+      totalAmount: priced.totalAmount
+    });
+    return res.json(await current.save());
+  }  catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message
+    });
+  }
+};
+exports.deleteBooking = async (req, res) => {
+  const booking = await Booking.findByIdAndDelete(req.params.bookingId);
+  return booking ? res.json({
+    message: 'Booking deleted'
+  }) : res.status(404).json({
+    message: 'Booking not found'
+  });
+};

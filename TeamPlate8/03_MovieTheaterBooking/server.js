@@ -1,0 +1,20 @@
+const express = require('express'), path = require('path'), dotenv = require('dotenv'), connectDB = require('./config/db');
+dotenv.config();
+const app = express();
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: true
+}));
+connectDB();
+app.get('/', (_q, s) => s.render('index', {
+  title: 'Movie Theater Booking'
+}));
+app.use('/', require('./routes/catalogRoutes'));
+app.use('/bookings', require('./routes/bookingRoutes'));
+app.use((q, s) => s.status(404).json({
+  message: `Route not found - ${q.originalUrl}`
+}));
+const PORT = process.env.PORT || 9999;
+app.listen(PORT, () => console.log(`Movie Booking running on ${PORT}`));

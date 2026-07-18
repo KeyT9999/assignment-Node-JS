@@ -1,0 +1,30 @@
+const User = require('../models/userModel'), jwt = require('jsonwebtoken');
+exports.login = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      username: req.body.username
+    });
+    if (!user || !await user.comparePassword(req.body.password || ''))return res.status(401).json({
+      message: 'Invalid username or password'
+    });
+    const token = jwt.sign({
+      id: user._id,
+      username: user.username,
+      role: user.role
+    }, process.env.JWT_SECRET || 'replace_with_a_long_random_secret', {
+      expiresIn: '1d'
+    });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role
+      }
+    })
+  } catch (e) {
+    res.status(500).json({
+      message: e.message
+    })
+  }
+};

@@ -1,0 +1,112 @@
+{
+  "info": {
+    "name": "04_HospitalAppointment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9999"
+    },
+    {
+      "key": "doctor_id",
+      "value": ""
+    },
+    {
+      "key": "appointment_id",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "record_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Get Doctors",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/doctors"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data=pm.response.json(); if(data.length) pm.collectionVariables.set('doctor_id',data[0]._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Appointments",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/appointments"
+      }
+    },
+    {
+      "name": "Book Appointment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"doctorId\":\"{{doctor_id}}\",\"patientName\":\"Nguyen Van A\",\"appointmentTime\":\"2027-08-01T09:00:00.000Z\",\"note\":\"Chest pain\"}"
+        },
+        "url": "{{base_url}}/appointments/book"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if(pm.response.code===201) pm.collectionVariables.set('appointment_id',pm.response.json()._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duplicate Slot - expect 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"doctorId\":\"{{doctor_id}}\",\"patientName\":\"Another Patient\",\"appointmentTime\":\"2027-08-01T09:00:00.000Z\"}"
+        },
+        "url": "{{base_url}}/appointments/book"
+      }
+    },
+    {
+      "name": "Complete Appointment",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/appointments/{{appointment_id}}/complete"
+      }
+    },
+    {
+      "name": "Complete Again - expect 400",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/appointments/{{appointment_id}}/complete"
+      }
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "info": {
+    "name": "TranKimThang Auth",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:9999" },
+    { "key": "user_token", "value": "" },
+    { "key": "manager_token", "value": "" },
+    { "key": "new_username", "value": "postman_user" },
+    { "key": "assigned_resource_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 Register Customer",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"{{new_username}}\",\n  \"password\": \"123456\",\n  \"fullName\": \"Postman User\",\n  \"role\": \"customer\"\n}" },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "02 Register Duplicate - Expect 409",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"{{new_username}}\",\"password\":\"123456\",\"fullName\":\"Postman User\"}" },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "03 Register Admin - Blocked",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"fake_admin\",\"password\":\"123456\",\"fullName\":\"Fake Admin\",\"role\":\"admin\"}" },
+        "url": "{{base_url}}/auth/register"
+      }
+    },
+    {
+      "name": "04 Login Customer",
+      "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.json().token) pm.collectionVariables.set('user_token', pm.response.json().token);"] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"{{new_username}}\",\"password\":\"123456\"}" },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "05 Get Me",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+        "url": "{{base_url}}/auth/me"
+      }
+    },
+    {
+      "name": "06 Customer Calls Manager Route - Expect 403",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+        "url": "{{base_url}}/demo/manager"
+      }
+    },
+    {
+      "name": "07 Login Wrong Password - Expect 401",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"{{new_username}}\",\"password\":\"wrong-password\"}" },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "08 Login Deactivated - Expect 403",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"deactivated1\",\"password\":\"123456\"}" },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "09 Login Manager",
+      "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.json().token) pm.collectionVariables.set('manager_token', pm.response.json().token);"] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"manager1\",\"password\":\"123456\"}" },
+        "url": "{{base_url}}/auth/login"
+      }
+    },
+    {
+      "name": "10 Manager Route",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{manager_token}}" }],
+        "url": "{{base_url}}/demo/manager"
+      }
+    }
+  ]
+}

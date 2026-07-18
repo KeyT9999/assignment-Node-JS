@@ -1,0 +1,641 @@
+{
+  "models": [
+    {
+      "name": "user",
+      "className": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "required": true,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "fullName",
+          "type": "String",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "assignedLaboratory",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Laboratory",
+          "default": null
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true"
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "current"
+        }
+      ]
+    },
+    {
+      "name": "laboratory",
+      "className": "Laboratory",
+      "fields": [
+        {
+          "name": "laboratoryCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "location",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "maximumActiveSamples",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "currentActiveSamples",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "0."
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "testCatalogue",
+      "className": "TestCatalogue",
+      "fields": [
+        {
+          "name": "testCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "sampleType",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "standardFee",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "estimatedMinutes",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "requiredReagents",
+          "type": "[String]",
+          "required": true,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true."
+        }
+      ]
+    },
+    {
+      "name": "reagent",
+      "className": "Reagent",
+      "fields": []
+    },
+    {
+      "name": "reagentLedger",
+      "className": "ReagentLedger",
+      "fields": [
+        {
+          "name": "reagentCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "unit",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "unitCost",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "reorderLevel",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "true."
+        },
+        {
+          "name": "reagentId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Reagent",
+          "default": null
+        },
+        {
+          "name": "laboratoryId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Laboratory",
+          "default": null
+        },
+        {
+          "name": "batchNumber",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "expiryDate",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "lastUpdated",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "current"
+        }
+      ]
+    },
+    {
+      "name": "sample",
+      "className": "Sample",
+      "fields": [
+        {
+          "name": "sampleCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "patientCode",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "patientName",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "laboratoryId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Laboratory",
+          "default": null
+        },
+        {
+          "name": "testId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "Test",
+          "default": null
+        },
+        {
+          "name": "sampleType",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "collectedAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "receivedAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "current"
+        },
+        {
+          "name": "startedAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "."
+        },
+        {
+          "name": "completedAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": "."
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "priority",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "registeredBy",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "RegisteredBy",
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "testExecution",
+      "className": "TestExecution",
+      "fields": []
+    },
+    {
+      "name": "reagentTransaction",
+      "className": "ReagentTransaction",
+      "fields": [
+        {
+          "name": "executionCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "sampleId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": "Sample",
+          "default": null
+        },
+        {
+          "name": "reagentCost",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "testFee",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalCost",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "resultSummary",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "resultStatus",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "transactionCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "batchNumber",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "quantity",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "unitCost",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalValue",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "performedBy",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "PerformedBy",
+          "default": null
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "method": "POST",
+      "path": "/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login"
+    },
+    {
+      "method": "POST",
+      "path": "/reagents/restock"
+    },
+    {
+      "method": "GET",
+      "path": "/reagents"
+    },
+    {
+      "method": "POST",
+      "path": "/samples"
+    },
+    {
+      "method": "POST",
+      "path": "/samples/:id/start-test"
+    },
+    {
+      "method": "PATCH",
+      "path": "/samples/:id/complete"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/sample-turnaround"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/reagent-usage"
+    }
+  ],
+  "roles": [
+    "auditor",
+    "manager"
+  ],
+  "authRequired": true,
+  "signals": {
+    "overlap": false,
+    "inventory": false,
+    "payment": true,
+    "views": false,
+    "atomic": true,
+    "date_range": false
+  }
+}

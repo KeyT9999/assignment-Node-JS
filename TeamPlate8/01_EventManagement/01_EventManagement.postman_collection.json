@@ -1,0 +1,180 @@
+{
+  "info": {
+    "name": "01_EventManagement",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9999"
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "student_token",
+      "value": ""
+    },
+    {
+      "key": "registration_id",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"admin1\",\"password\":\"123456\"}"
+        },
+        "url": "{{base_url}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('admin_token',pm.response.json().token)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login Student",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"student1\",\"password\":\"123456\"}"
+        },
+        "url": "{{base_url}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('student_token',pm.response.json().token)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Events",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{student_token}}"
+          }
+        ],
+        "url": "{{base_url}}/events"
+      }
+    },
+    {
+      "name": "Register Event",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{student_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"eventId\":\"65fd9dc542e1a12345678901\"}"
+        },
+        "url": "{{base_url}}/registrations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if(pm.response.code===201)pm.collectionVariables.set('registration_id',pm.response.json().registration._id)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": "{{base_url}}/listRegistrations?page=1&limit=5"
+      }
+    },
+    {
+      "name": "Student List Forbidden",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{student_token}}"
+          }
+        ],
+        "url": "{{base_url}}/listRegistrations"
+      }
+    },
+    {
+      "name": "Search By Date",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": "{{base_url}}/getRegistrationsByDate?startDate=2026-01-01&endDate=2027-01-01"
+      }
+    },
+    {
+      "name": "Unregister",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{student_token}}"
+          }
+        ],
+        "url": "{{base_url}}/registrations/{{registration_id}}"
+      }
+    }
+  ]
+}

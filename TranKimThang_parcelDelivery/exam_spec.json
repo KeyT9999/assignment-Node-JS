@@ -1,0 +1,255 @@
+{
+  "models": [
+    {
+      "name": "user",
+      "className": "User",
+      "fields": [
+        {
+          "name": "username",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "password",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "role",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "deliveryZone",
+      "className": "DeliveryZone",
+      "fields": [
+        {
+          "name": "zoneCode",
+          "type": "String",
+          "required": false,
+          "unique": true,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "zoneName",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "maxWeightKg",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "baseFee",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "feePerKm",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "feePerKg",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "shipment",
+      "className": "Shipment",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "User",
+          "default": null
+        },
+        {
+          "name": "zoneId",
+          "type": "ObjectId",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": "DeliveryZone",
+          "default": null
+        },
+        {
+          "name": "receiverName",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "receiverAddress",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "distanceKm",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "weightKg",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "deliveryType",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "declaredValue",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "totalFee",
+          "type": "Number",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "required": false,
+          "unique": false,
+          "enum": [],
+          "ref": null,
+          "default": null
+        }
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "method": "POST",
+      "path": "/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login"
+    },
+    {
+      "method": "GET",
+      "path": "/shipments"
+    },
+    {
+      "method": "POST",
+      "path": "/shipments"
+    },
+    {
+      "method": "PATCH",
+      "path": "/shipments/:id/status"
+    }
+  ],
+  "roles": [
+    "admin",
+    "customer"
+  ],
+  "authRequired": true,
+  "signals": {
+    "overlap": false,
+    "inventory": false,
+    "payment": true,
+    "views": false,
+    "atomic": false,
+    "date_range": false
+  }
+}

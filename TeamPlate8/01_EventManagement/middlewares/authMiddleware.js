@@ -1,0 +1,18 @@
+const jwt = require('jsonwebtoken');
+const protect = (req, res, next) => {
+  const h = req.headers.authorization;
+  if (!h?.startsWith('Bearer '))return res.status(401).json({
+    message: 'Not authorized, no token provided'
+  });
+  try {
+    req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET || 'replace_with_a_long_random_secret');
+    next()
+  } catch (e) {
+    res.status(401).json({
+      message: 'Not authorized, token failed'
+    })
+  }
+};
+module.exports = {
+  protect
+};

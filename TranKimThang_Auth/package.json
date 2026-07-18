@@ -1,0 +1,22 @@
+{
+  "name": "trankimthang_auth",
+  "version": "1.0.0",
+  "description": "Reusable SDN302 authentication and RBAC starter",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon utils/startDev.js",
+    "seed": "node utils/seedData.js",
+    "test:auth": "node tests/authSmoke.js && node tests/managerModeSmoke.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

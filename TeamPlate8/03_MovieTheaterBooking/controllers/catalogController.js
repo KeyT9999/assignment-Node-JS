@@ -1,0 +1,5 @@
+const Theater = require('../models/theaterModel'), Schedule = require('../models/scheduleModel');
+exports.theaters = async (_q, s) => s.json(await Theater.find());
+exports.schedules = async (_q, s) => s.json(await Schedule.find().sort({
+  showTime: 1
+}));

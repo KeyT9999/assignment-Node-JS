@@ -1,0 +1,163 @@
+{
+  "info": {
+    "name": "06_CarRental",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9999"
+    },
+    {
+      "key": "booking_id",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "car_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "List Cars",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/cars"
+      }
+    },
+    {
+      "name": "Create Car",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"carNumber\":\"51A-99999\",\"capacity\":5,\"status\":\"available\",\"pricePerDay\":500000,\"features\":[\"GPS\"]}"
+        },
+        "url": "{{base_url}}/cars"
+      }
+    },
+    {
+      "name": "List Bookings",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/bookings"
+      }
+    },
+    {
+      "name": "Create Booking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customerName\":\"Nguyen Van A\",\"carNumber\":\"51A-12345\",\"startDate\":\"2026-08-01\",\"endDate\":\"2026-08-03\"}"
+        },
+        "url": "{{base_url}}/bookings"
+      }
+    },
+    {
+      "name": "Update Booking",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"endDate\":\"2026-08-04\"}"
+        },
+        "url": "{{base_url}}/bookings/{{booking_id}}"
+      }
+    },
+    {
+      "name": "Delete Booking",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/bookings/{{booking_id}}"
+      }
+    },
+    {
+      "name": "Generated endpoint coverage",
+      "item": [
+        {
+          "name": "07 PUT /cars/:carId",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/cars/{{car_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"carNumber\": \"TEST-001\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 DELETE /cars/:carId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{base_url}}/cars/{{car_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
