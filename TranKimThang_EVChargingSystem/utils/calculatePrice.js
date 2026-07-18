@@ -10,45 +10,54 @@
  * @param {Date|String} params.endTime - End time of the session
  * @param {Number} params.pricePerKwh - Price per unit (e.g., price per hour, price per Kwh)
  * @returns {Object} { hours, totalCost, discountApplied }
- */ const calculatePrice = ({
+ */ 
+const calculatePrice = ({
   startTime,
   endTime,
   pricePerKwh
 }) => {
   const start = new Date(startTime);
   const end = new Date(endTime);
-  // Calculate duration in hours (supporting partial/decimal hours)
+  
+  // Tính toán thời lượng sạc theo giờ (hỗ trợ số thập phân đầy đủ cho phần lẻ phút)
   const durationMs = end - start;
   const hours = durationMs / (1000 * 60 * 60);
+  
   if (hours <= 0) {
     throw new Error('End time must be after start time');
   }
+  
   let totalCost = 0;
-  // 1. Check pricing mode (EV vs Normal)
-  // EV charging session formula: total = hours * 15 * pricePerKwh (assuming 15kWh per hour)
+  
+  // 1. Kiểm tra chế độ tính giá (EV so với Normal)
+  // Công thức chế độ sạc xe điện EV: tổng tiền = số giờ * hệ số 15 * đơn giá trên Kwh (giả định xe sạc 15kWh mỗi giờ)
   if (process.env.PRICING_MODE === 'EV') {
     totalCost = hours * 15 * pricePerKwh;
   }  else {
-    // Normal session formula: total = hours * pricePerHour
+    // Công thức tính giá thông thường (phòng/chỗ làm việc): tổng tiền = số giờ * đơn giá theo giờ
     totalCost = hours * pricePerKwh;
   }
-  // 2. Check Happy Hour (Off-peak discount)
+  
+  // 2. Kiểm tra khung giờ vàng giảm giá (Happy Hour - Giờ thấp điểm)
   let discountApplied = false;
   if (process.env.ENABLE_HAPPY_HOUR === 'true') {
-    // Happy Hour conditions: start time is between 22:00 (10 PM) and 04:00 (4 AM)
+    // Khung giờ vàng giảm giá: Thời điểm bắt đầu sạc nằm trong khoảng từ 22:00 đêm đến 04:00 sáng hôm sau
     const startHour = start.getHours();
     if (startHour >= 22 || startHour < 4) {
-      totalCost = totalCost * 0.7;
-      // 30% discount
+      totalCost = totalCost * 0.7; // Giảm giá 30% (chỉ trả 70% tổng tiền ban đầu)
       discountApplied = true;
     }
   }
-  // Round price to nearest integer or 2 decimal places depending on requirements (currency format)
+  
+  // Làm tròn tổng chi phí sạc về số nguyên gần nhất
   totalCost = Math.round(totalCost);
+  
   return {
     hours,
     totalCost,
     discountApplied
   };
 };
+
 module.exports = calculatePrice;
+

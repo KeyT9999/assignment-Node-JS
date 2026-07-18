@@ -9,7 +9,8 @@
  * @param {Date|String} params.startTime - Requested start time (S1)
  * @param {Date|String} params.endTime - Requested end time (E1)
  * @returns {Promise<Object|null>} Returns the conflicting session if it exists, otherwise null
- */ const checkOverlap = async ({
+ */ 
+const checkOverlap = async ({
   SessionModel,
   stationId,
   startTime,
@@ -17,6 +18,10 @@
 }) => {
   const start = new Date(startTime);
   const end = new Date(endTime);
+  
+  // Truy vấn cơ sở dữ liệu để tìm phiên sạc đã tồn tại bị trùng lặp thời gian.
+  // Điều kiện trùng lặp: S2 < E1 (startTime của bản ghi trong DB < endTime của yêu cầu mới)
+  // và E2 > S1 (endTime của bản ghi trong DB > startTime của yêu cầu mới)
   const conflict = await SessionModel.findOne({
     stationId,
     startTime: {
@@ -28,6 +33,9 @@
     }
     // E2 > S1 (existing end > requested start)
   });
+  
   return conflict;
 };
+
 module.exports = checkOverlap;
+

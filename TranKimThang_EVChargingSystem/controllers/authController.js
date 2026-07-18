@@ -1,55 +1,68 @@
+/**
+ * @file authController.js
+ * @description Controller quản lý các nghiệp vụ Xác thực & Phân quyền cho hệ thống EV Charging System.
+ * Bao gồm Đăng ký tài khoản (register) và Đăng nhập (login).
+ */
+
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-// @desc    Register a new user
-// @route   POST /auth/register
-// @access  Public
+
+/**
+ * Xử lý đăng ký tài khoản khách hàng hoặc quản trị viên mới.
+ * Tự động cộng số dư khuyến mãi $50 cho khách hàng nếu hệ thống chạy ở chế độ PRICING_MODE = EV.
+ * 
+ * @async
+ * @function register
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 const register = async (req, res) => {
   try {
-    const {
-      username,
-      password,
-      role,
-      balance
-    }
- = req.body;
+    const { username, password, role, balance } = req.body;
+    
+    // Kiểm tra các trường dữ liệu bắt buộc
     if (!username || !password) {
       return res.status(400).json({
         message: 'Username and password are required'
       });
     }
-    // Check if user already exists
-    const userExists = await User.findOne({
-      username
-    });
+    
+    // Kiểm tra tên đăng nhập đã được sử dụng hay chưa
+    const userExists = await User.findOne({ username });
     if (userExists) {
       return res.status(400).json({
         message: 'Username already exists'
       });
     }
-    // Set default role if not provided
+    
+    // Gán vai trò mặc định nếu không truyền
     const userRole = role || 'customer';
-    // Hash password
+    
+    // Mã hóa mật khẩu bảo mật bằng bcrypt
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    // Set default balance
+    
+    // Tính toán số dư khởi tạo
     let userBalance = balance;
     if (userBalance === undefined) {
-      // If EV mode is active, automatic $50.00 welcome bonus for customers
+      // Nghiệp vụ đặc thù: Nếu chế độ giá điện EV hoạt động, tự động tặng $50 số dư khuyến mãi cho vai trò customer
       if (userRole === 'customer' && process.env.PRICING_MODE === 'EV') {
         userBalance = 50;
       }  else {
         userBalance = 0;
       }
     }
-    // Create user
+    
+    // Tạo tài khoản mới vào cơ sở dữ liệu
     const user = await User.create({
       username,
       password: hashedPassword,
       role: userRole,
       balance: userBalance
     });
-    // Return created user without password
+    
+    // Chuẩn bị dữ liệu trả về (không gửi mật khẩu)
     const userResponse = {
       _id: user._id,
       username: user.username,
@@ -65,46 +78,54 @@ const register = async (req, res) => {
     });
   }
 };
-// @desc    Authenticate a user & get token
-// @route   POST /auth/login
-// @access  Public
+
+/**
+ * Xử lý đăng nhập tài khoản.
+ * Đối khớp tên đăng nhập & so sánh mật khẩu đã mã hóa.
+ * Tạo JWT token chứa thông tin nhận diện cơ bản phục vụ cho các request tiếp theo.
+ * 
+ * @async
+ * @function login
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 const login = async (req, res) => {
   try {
-    const {
-      username,
-      password
-    }
- = req.body;
+    const { username, password } = req.body;
+    
+    // Kiểm tra đầu vào
     if (!username || !password) {
       return res.status(400).json({
         message: 'Username and password are required'
       });
     }
-    // Find user by username
-    const user = await User.findOne({
-      username
-    });
+    
+    // Tìm kiếm người dùng dựa trên tên đăng nhập
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(401).json({
         message: 'Invalid username or password'
       });
     }
-    // Compare passwords
+    
+    // So sánh mật khẩu dạng thô với mật khẩu băm trong DB
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
         message: 'Invalid username or password'
       });
     }
-    // Generate JWT token containing id, username, role
+    
+    // Tạo mã token JWT có hiệu lực 30 ngày chứa: id, username, role
     const token = jwt.sign({
       id: user._id,
       username: user.username,
       role: user.role
     }, process.env.JWT_SECRET || 'sdn302_secret_key', {
       expiresIn: '30d'
-    }     );
-    // Return user info and token
+    });
+    
+    // Trả về token và dữ liệu thông tin tài khoản cơ bản cho Client
     return res.json({
       token,
       user: {
@@ -121,7 +142,9 @@ const login = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   register,
   login
 };
+
